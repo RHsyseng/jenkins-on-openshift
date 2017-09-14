@@ -9,6 +9,9 @@ stage ansible_connection=local gather_facts=no
 [prod]
 prod ansible_connection=local gather_facts=no
 
+[registry]
+registry ansible_connection=local gather_facts=no
+
 [dev:vars]
 clusterhost=https://dev.example.com:8443
 token=FIXME_TOKEN
@@ -21,6 +24,11 @@ oc=oc --insecure-skip-tls-verify=true --token={{ token }} --server={{ clusterhos
 
 [prod:vars]
 clusterhost=https://prod.example.com:8443
+token=FIXME_TOKEN
+oc=oc --token={{ token }} --server={{ clusterhost }}
+
+[registry:vars]
+clusterhost=https://registry.example.com:8443
 token=FIXME_TOKEN
 oc=oc --token={{ token }} --server={{ clusterhost }}
 
