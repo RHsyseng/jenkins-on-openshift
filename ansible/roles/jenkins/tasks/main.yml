@@ -1,0 +1,22 @@
+- name: check if custom build template exists
+  command: "{{ oc }} get template jenkins-custom -n {{ project_name }}"
+  register: custom_build_exists
+  ignore_errors: yes
+- name: Create jenkins custom build template
+  command: "{{ oc }} create -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }}"
+  when: custom_build_exists|failed
+- name: check if custom jenkins image exists
+  command: "{{ oc }} get is jenkins-custom -n {{ project_name }}"
+  register: custom_image_exists
+  ignore_errors: yes
+- name: Create custom Jenkins source-to-image build
+  command: "{{ oc }} new-app --template=jenkins-custom -n {{ project_name }}"
+  when: custom_image_exists|failed
+- name: check if jenkins app exists
+  command: "{{ oc }} get dc jenkins -n {{ project_name }}"
+  register: jenkins_exists
+  ignore_errors: yes
+- name: Create Jenkins app
+  command: "{{ oc }} new-app --template jenkins-ephemeral --param NAMESPACE={{ project_name }} --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }}"
+  when: jenkins_exists|failed
+  
