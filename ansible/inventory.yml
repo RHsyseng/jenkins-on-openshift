@@ -1,0 +1,13 @@
+all:
+  hosts:
+    dev:
+    stage:
+    prod:
+    registry:
+  vars:
+    ansible_connection: local
+    gather_facts: no
+nonproduction:
+  hosts:
+    dev:
+    stage:

@@ -1,0 +1,12 @@
+clusterhost: https://cluster.example.com:8443
+token: eyJhbGciOiJSUzI1NiIsI...nR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL
+oc: oc --token={{ token }} --server={{ clusterhost }}
+
+admin_users:
+  - admin@example.com
+editor_users:
+viewer_users:
+  - dev@example.com
+deprecated_admin_users:
+deprecated_editor_users:
+deprecated_viewer_users:
