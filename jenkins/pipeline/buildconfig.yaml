@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: "declarative-pipeline"
+spec:
+  source:
+    type: "Git"
+    git:
+      uri: "https://github.com/rhsyseng/jenkins-on-openshift"
+      ref: "master"
+  strategy:
+    type: "JenkinsPipeline"
+    jenkinsPipelineStrategy:
+        jenkinsfilePath: jenkins/pipeline/Jenkinsfile
