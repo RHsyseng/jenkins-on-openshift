@@ -1,12 +1,18 @@
 pipeline {
     agent any
     triggers {
-        pollSCM('H/15 * * * *')
+        pollSCM('H/5 * * * *')
     }
     stages {
-        stage('step 1') {
+        stage('OpenShift Project') {
             steps {
-                echo 'Hello World'
+                script {
+                    openshift.withCluster() {
+                        openshift.withProject() {
+                            echo "Project: ${openshift.project()}"
+                        }
+                    }
+                }
             }
         }
     }
