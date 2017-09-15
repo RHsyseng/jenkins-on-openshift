@@ -21,7 +21,7 @@ oc sa ${TOKEN_NAME}
 if [[ $? -ne 0 ]]; then
   oc create serviceaccount ${TOKEN_NAME}  -n ${PROJECT_NAME}
 fi
-oc policy add-role-to-user admin system:serviceaccounts:${PROJECT_NAME}:${TOKEN_NAME} -n ${PROJECT_NAME}
+oc policy add-role-to-user admin system:serviceaccount:${PROJECT_NAME}:${TOKEN_NAME} -n ${PROJECT_NAME}
 
 set +x
 echo "Copy+paste this service account token:"

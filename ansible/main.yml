@@ -1,0 +1,5 @@
+---
+- name: Configure authorization
+  hosts: all
+  roles:
+    - role: auth

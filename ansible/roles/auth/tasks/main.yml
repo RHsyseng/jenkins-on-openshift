@@ -1,0 +1,26 @@
+---
+- name: Add admin users
+  command: "{{ oc }} policy add-role-to-user {{ project_admin_role}} {{ item }} -n {{ project_name }}"
+  with_items: "{{ admin_users }}"
+  when: admin_users
+- name: Add editor users
+  command: "{{ oc }} policy add-role-to-user {{ project_editor_role}} {{ item }} -n {{ project_name }}"
+  with_items: "{{ editor_users }}"
+  when: editor_users
+- name: Add viewer users
+  command: "{{ oc }} policy add-role-to-user {{ project_registry_viewer_role}} {{ item }} -n {{ project_name }}"
+  with_items: "{{ viewer_users }}"
+  when: viewer_users
+
+- name: Remove admin users
+  command: "{{ oc }} policy remove-role-from-user {{ project_admin_role}} {{ item }} -n {{ project_name }}"
+  with_items: "{{ deprecated_admin_users }}"
+  when: deprecated_admin_users
+- name: Remove editor users
+  command: "{{ oc }} policy remove-role-from-user {{ project_editor_role}} {{ item }} -n {{ project_name }}"
+  with_items: "{{ deprecated_editor_users }}"
+  when: deprecated_editor_users
+- name: Remove viewer users
+  command: "{{ oc }} policy remove-role-from-user {{ project_registry_viewer_role}} {{ item }} -n {{ project_name }}"
+  with_items: "{{ deprecated_viewer_users }}"
+  when: deprecated_viewer_users
