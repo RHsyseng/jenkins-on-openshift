@@ -1,3 +1,6 @@
+# OpenShift Jenkins plugins
+openshift-client:0.9.7
+
 config-file-provider:2.16.2
 docker-commons:1.8
 
@@ -18,8 +21,6 @@ lockable-resources:1.11.2
 matrix-project:1.7.1
 multiple-scms:0.6
 
-# OpenShift Jenkins plugins
-openshift-client:0.9.6
 openshift-login:0.12
 openshift-pipeline:1.0.52
 openshift-sync:0.1.28
