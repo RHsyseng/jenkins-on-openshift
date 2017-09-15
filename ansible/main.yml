@@ -3,3 +3,7 @@
   hosts: all
   roles:
     - role: auth
+- name: Setup Jenkins
+  hosts: dev
+  roles:
+    - role: jenkins
