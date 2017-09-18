@@ -4,14 +4,72 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
     stages {
-        stage('OpenShift Project') {
+        stage('Dev - MochaJS Test' ) {
+            /* Using the NodeJS slave image
+             * to executed mocha testing
+             */
+            agent {
+                label 'nodejs'
+            }
+            steps {
+                git url: 'https://github.com/openshift/nodejs-ex'
+                sh 'npm install'
+                sh 'npm test'
+            }
+        }
+        stage('Dev - OpenShift BuildConfig') {
             steps {
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
-                            echo "Project: ${openshift.project()}"
+                            echo "Running OpenShift BuildConfig"
                         }
                     }
+                }
+            }
+        }
+        stage('Dev - Test') {
+
+            /* I am assuming this will be running the pod and executing
+             * tests against what has been deployed.
+             * ** DeploymentConfig **
+             */
+            steps {
+                echo "Running dev test..."
+            }
+        }
+        stage('Dev - Push to registry') {
+            steps {
+                echo "Dev - Push to registry"
+            }
+        }
+        stage('Stage - OpenShift DeploymentConfig') {
+            /* ** DeploymentConfig **
+             */
+            steps {
+                script {
+                    openshift.withCluster() {
+                        openshift.withProject() {
+                            echo "What are we doing here?"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Stage - Test') {
+            steps {
+                echo "Stage - Test"
+            }
+        }
+        stage('Production - Push Image') {
+            steps {
+                echo "Production - Push Image"
+            }
+        }
+        stage('Production - Promote Image') {
+            steps {
+                script {
+                    env.PROMOTE_PROD = input message: 'Promote to Production'
                 }
             }
         }
