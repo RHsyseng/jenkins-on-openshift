@@ -1,9 +1,20 @@
 ---
-- name: Configure authorization
+- name: Get registry push/pull tokens
+  hosts:
+    - registry
+    - prod
+  roles:
+    - role: registryauth
+- name: Configure project authorization
   hosts: all
   roles:
     - role: auth
-- name: Setup Jenkins
+- name: Setup Jenkins and registry tokens
   hosts: dev
   roles:
     - role: jenkins
+    - role: pusher
+- name: Setup registry tokens
+  hosts: stage
+  roles:
+    - role: puller

@@ -1,0 +1,25 @@
+---
+- name: Check if push central registry secret exists
+  command: "{{ oc }} get secret push-external-registry -n {{ project_name }}"
+  register: central_registry_secret
+  ignore_errors: true
+- name: Docker push central registry secret
+  command: "{{ oc }} secrets new-dockercfg push-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused -n {{ project_name }}"
+  when: central_registry_secret|failed
+- name: Link docker push central registry secret
+  command: "{{ oc }} secrets link builder push-external-registry -n {{ project_name }}"
+  when: central_registry_secret|failed
+- name: Check if push prod registry secret exists
+  command: "{{ oc }} get secret push-prod-registry -n {{ project_name }}"
+  register: prod_registry_secret
+  ignore_errors: true
+- name: Docker push prod registry secret
+  command: "{{ oc }} secrets new-dockercfg push-prod-registry --docker-username=unused --docker-password={{ hostvars['prod']['pushtoken'] }} --docker-email=unused -n {{ project_name }}"
+  when:
+    - production_registry_hostname is defined
+    - prod_registry_secret|failed
+- name: Link docker push prod registry secret
+  command: "{{ oc }} secrets link builder push-prod-registry -n {{ project_name }}"
+  when:
+    - production_registry_hostname is defined
+    - prod_registry_secret|failed

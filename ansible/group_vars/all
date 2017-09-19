@@ -3,4 +3,5 @@ project_admin_role: admin
 project_editor_role: edit
 project_viewer_role: basic-users
 project_registry_viewer_role: registry-viewer
+production_registry_hostname: registry.starter-ca-central-1.openshift.com
 state: present
