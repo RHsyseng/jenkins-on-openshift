@@ -1,3 +1,5 @@
+@Library('Utils') _
+
 pipeline {
     agent any
     triggers {
@@ -5,14 +7,12 @@ pipeline {
     }
     stages {
         stage('Dev - MochaJS Test' ) {
-            /* Using the NodeJS slave image
-             * to executed mocha testing
-             */
             agent {
                 label 'nodejs'
             }
             steps {
                 git url: 'https://github.com/openshift/nodejs-ex'
+                sh 'env'
                 sh 'npm install'
                 sh 'npm test'
             }
@@ -29,11 +29,6 @@ pipeline {
             }
         }
         stage('Dev - Test') {
-
-            /* I am assuming this will be running the pod and executing
-             * tests against what has been deployed.
-             * ** DeploymentConfig **
-             */
             steps {
                 echo "Running dev test..."
             }
@@ -44,13 +39,14 @@ pipeline {
             }
         }
         stage('Stage - OpenShift DeploymentConfig') {
-            /* ** DeploymentConfig **
-             */
             steps {
+                syncOpenShiftSecret 'stage'
                 script {
-                    openshift.withCluster() {
-                        openshift.withProject() {
-                            echo "What are we doing here?"
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                        openshift.withCluster('https://osemaster.sbu.lab.eng.bos.redhat.com:8443', env.PASSWORD) {
+                            openshift.withProject('lifecycle') {
+                                echo "What are we doing here? - ${openshift.project()}"
+                            }
                         }
                     }
                 }
