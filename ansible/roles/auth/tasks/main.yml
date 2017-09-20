@@ -24,3 +24,26 @@
   command: "{{ oc }} policy remove-role-from-user {{ project_registry_viewer_role}} {{ item }} -n {{ project_name }}"
   with_items: "{{ deprecated_viewer_users }}"
   when: deprecated_viewer_users
+
+- name: Check if Jenkins serviceaccount exists
+  command: "{{ oc }} get sa {{ jenkins_serviceaccount_name }} -n {{ project_name }}"
+  register: jenkins_sa_exists
+  ignore_errors: true
+  when: jenkins_automation_openshift_role is defined
+- name: Create Jenkins serviceaccount
+  command: "{{ oc }} create serviceaccount {{ jenkins_serviceaccount_name }} -n {{ project_name }}"
+  when:
+    - jenkins_sa_exists|failed
+    - jenkins_automation_openshift_role is defined
+- name: Assign role to Jenkins serviceaccount
+  command: "{{ oc }} policy add-role-to-user {{ jenkins_automation_openshift_role }} system:serviceaccount:{{ project_name }}:{{ jenkins_serviceaccount_name }} -n {{ project_name }}"
+  when:
+    - jenkins_sa_exists|failed
+    - jenkins_automation_openshift_role is defined
+- name: Get Jenkins token value
+  command: "{{ oc }} sa get-token {{ jenkins_serviceaccount_name }} -n {{ project_name }}"
+  register: jenkinstoken
+  when: jenkins_automation_openshift_role is defined
+- set_fact:
+    jenkinstoken: "{{ jenkinstoken.stdout }}"
+  when: jenkins_automation_openshift_role is defined
