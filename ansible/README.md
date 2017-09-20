@@ -22,10 +22,10 @@ These are a set of reference playbooks to configure an application project names
         ├── group_vars
         │   ├── all
         │   └── nonproduction
-1. The registry automation token does not need as much privilege. Let's tweak that:
+1. The registry ansible token does not need as much privilege. Let's tweak that:
 
-        oc policy add-role-to-user registry-admin system:serviceaccounts:lifecycle:automation
-        oc policy remove-role-from-user admin system:serviceaccounts:lifecycle:automation
+        oc policy add-role-to-user registry-admin system:serviceaccounts:lifecycle:ansible
+        oc policy remove-role-from-user admin system:serviceaccounts:lifecycle:ansible
 1. Run the playbook:
 
         ansible-playbook -i ansible/inventory.yml ansible/main.yml

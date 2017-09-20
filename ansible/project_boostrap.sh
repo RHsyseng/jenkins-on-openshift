@@ -7,7 +7,7 @@
 PROJECT_NAME=${PROJECT_NAME:-lifecycle}
 PROJECT_DISP=${PROJECT_DISP:-Software lifecycle}
 PROJECT_DESC=${PROJECT_DESC:-Sofware Development Lifecycle (SDLC)}
-TOKEN_NAME=${TOKEN_NAME:-automation}
+TOKEN_NAME=${TOKEN_NAME:-ansible}
 
 set -x
 
@@ -17,7 +17,7 @@ oc project ${PROJECT_NAME}
 if [[ $? -ne 0 ]]; then
   oc new-project ${PROJECT_NAME} --display-name "${PROJECT_DISP}" --description "${PROJECT_DESC}"
 fi
-oc sa ${TOKEN_NAME}
+oc get sa ${TOKEN_NAME}
 if [[ $? -ne 0 ]]; then
   oc create serviceaccount ${TOKEN_NAME}  -n ${PROJECT_NAME}
 fi
