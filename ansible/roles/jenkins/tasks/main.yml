@@ -18,26 +18,9 @@
   when:
     - prod_api_secret_exists|failed
     - hostvars['prod']['jenkinstoken'] is defined
-- name: check if custom build template exists
-  command: "{{ oc }} get template jenkins-custom -n {{ project_name }}"
-  register: custom_build_exists
-  ignore_errors: yes
-- name: Create jenkins custom build template
-  command: "{{ oc }} create -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }}"
-  when: custom_build_exists|failed
-- name: check if custom jenkins image exists
-  command: "{{ oc }} get is jenkins-custom -n {{ project_name }}"
-  register: custom_image_exists
-  ignore_errors: yes
 - name: Create custom Jenkins source-to-image build
-  command: "{{ oc }} new-app --template=jenkins-custom -n {{ project_name }}"
-  when: custom_image_exists|failed
-- name: check if jenkins app exists
-  command: "{{ oc }} get dc jenkins -n {{ project_name }}"
-  register: jenkins_exists
-  ignore_errors: yes
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create Jenkins app
-  command: "{{ oc }} new-app --template jenkins-ephemeral --param NAMESPACE={{ project_name }} --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }}"
-  when: jenkins_exists|failed
+  shell: "{{ oc }} process openshift//jenkins-ephemeral --ignore-unknown-parameters=true --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create Jenkins pipeline
   shell: "{{ oc }} process -f {{ role_path }}/files/pipeline-build.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
