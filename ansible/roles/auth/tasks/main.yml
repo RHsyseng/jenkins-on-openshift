@@ -47,3 +47,13 @@
 - set_fact:
     jenkinstoken: "{{ jenkinstoken.stdout }}"
   when: jenkins_automation_openshift_role is defined
+
+- name: Get registry push token value
+  command: "{{ oc }} sa get-token builder -n {{ project_name }}"
+  register: forpush
+- name: Get pull token value
+  command: "{{ oc }} sa get-token deployer -n {{ project_name }}"
+  register: forpull
+- set_fact:
+    pushtoken: "{{ forpush.stdout }}"
+    pulltoken: "{{ forpull.stdout }}"
