@@ -6,6 +6,7 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
     stages {
+
         stage('Dev - MochaJS Test' ) {
             agent {
                 label 'nodejs'
@@ -22,12 +23,46 @@ pipeline {
                 sh 'npm test'
             }
         }
+
         stage('Dev - OpenShift Configuration') {
             steps {
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
-                            echo "Running OpenShift BuildConfig"
+
+                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+
+                            def createdObjects = openshift.apply(
+                                    openshift.process( "nodejs-mongo-persistent",
+                                                       "-p",
+                                                       "TAG=${env.GIT_COMMIT}" )
+                            )
+
+                            def builds = createdObjects.narrow('bc').related('builds')
+
+                            timeout(10) {
+                                builds.watch {
+                                    return it.count() > 0
+                                }
+                                builds.untilEach {
+                                    return it.object().status.phase == "Complete"
+                                }
+                            }
+
+
+                            //def pods = createdObjects.narrow('dc').related('pods')
+
+                            timeout(10) {
+                                createdObjects.narrow('dc').withEach {
+                                    it.related('pods').untilEach {
+                                        return it.object().status.phase == "Running"
+                                    }
+                                }
+                            }
+
+                            env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
+                            println("${env.DEV_ROUTE}")
+
                         }
                     }
                 }
@@ -69,6 +104,7 @@ pipeline {
                 echo "Production - Push Image"
             }
         }
+        /*
         stage('Production - Promote Image') {
             steps {
                 script {
@@ -76,5 +112,8 @@ pipeline {
                 }
             }
         }
+        */
     }
 }
+
+// vim: ft=groovy
