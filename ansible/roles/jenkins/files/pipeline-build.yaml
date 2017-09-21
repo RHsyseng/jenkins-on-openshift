@@ -7,7 +7,7 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: "declarative-pipeline"
+    name: "app-lifecycle"
   spec:
     source:
       type: "Git"
