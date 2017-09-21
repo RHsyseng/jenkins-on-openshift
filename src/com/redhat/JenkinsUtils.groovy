@@ -23,6 +23,13 @@ String createCredentialFromOpenShiftSecret(String id, HashMap secret) {
     String username = ""
 
     try {
+
+        /* for each item in the data object
+         * check if the key name is password or token
+         * if it is base64 decode.  Otherwise add the
+         * value to username variable.
+         */
+
         secret.data.each { key, value ->
             if ( key.toLowerCase().matches("password|token")) {
                 password = value.decodeBase64()
@@ -31,7 +38,7 @@ String createCredentialFromOpenShiftSecret(String id, HashMap secret) {
                 username = value.decodeBase64()
             }
         }
-        return createCredentials(id, username, password,"Secret Synced from OpenShift")
+        return createCredentials(id, username, password, "Secret Synced from OpenShift")
     }
     catch(all) {
         Logger.getLogger("com.redhat.Utils").log(Level.SEVERE, all.toString())
