@@ -13,9 +13,9 @@ objects:
       type: "Git"
       git:
         uri: ${SOURCE_REPOSITORY_URL}
-        ref: "master"
+        ref: ${SOURCE_REPOSITORY_REF}
     strategy:
-      type: ${SOURCE_REPOSITORY_REF}
+      type: "JenkinsPipeline"
       jenkinsPipelineStrategy:
           jenkinsfilePath: Jenkinsfile
 parameters:
