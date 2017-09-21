@@ -21,7 +21,7 @@
 - name: Create custom Jenkins source-to-image build
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create Jenkins app
-  shell: "{{ oc }} process openshift//jenkins-persistent --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process openshift//jenkins-persistent --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param MEMORY_LIMIT=2Gi --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Remove Jenkins app image change trigger
   command: "{{ oc }} set triggers dc/jenkins --remove-all=true -n {{ project_name }}"
 - name: Remove all Jenkins image build triggers
