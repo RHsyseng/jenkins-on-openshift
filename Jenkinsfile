@@ -6,6 +6,7 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
     stages {
+
         stage('Dev - MochaJS Test' ) {
             agent {
                 label 'nodejs'
@@ -22,12 +23,47 @@ pipeline {
                 sh 'npm test'
             }
         }
+
         stage('Dev - OpenShift Configuration') {
             steps {
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
-                            echo "Running OpenShift BuildConfig"
+
+                            // Apply the template object from JSON file
+                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+
+                            def createdObjects = openshift.apply(
+                                    openshift.process( "nodejs-mongo-persistent",
+                                                       "-p",
+                                                       "TAG=${env.GIT_COMMIT}" ))
+
+                            def builds = createdObjects.narrow('bc').related('builds')
+
+                            timeout(10) {
+                                builds.watch {
+                                    // Wait until a build object is available
+                                    return it.count() > 0
+                                }
+                                builds.untilEach {
+                                    // Wait until a build object is complete
+                                    return it.object().status.phase == "Complete"
+                                }
+                            }
+
+                            timeout(10) {
+                                /* for each DeploymentConfig that was just
+                                 * created above get the related pod
+                                 * and wait until each is running
+                                 */
+                                createdObjects.narrow('dc').withEach {
+                                    it.related('pods').untilEach {
+                                        return it.object().status.phase == "Running"
+                                    }
+                                }
+                            }
+
+                            env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
                         }
                     }
                 }
@@ -69,6 +105,7 @@ pipeline {
                 echo "Production - Push Image"
             }
         }
+        /*
         stage('Production - Promote Image') {
             steps {
                 script {
@@ -76,5 +113,8 @@ pipeline {
                 }
             }
         }
+        */
     }
 }
+
+// vim: ft=groovy
