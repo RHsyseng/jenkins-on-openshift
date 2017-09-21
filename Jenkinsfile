@@ -44,13 +44,13 @@ pipeline {
                 // This method syncOpenShiftSecret will extract an OpenShift secret
                 // and add it to a Jenkins Credential.
 
-                syncOpenShiftSecret 'stage'
+                syncOpenShiftSecret 'stage-api'
                 script {
                     // Use that newly created Jenkins credential to connect to an external
                     // cluster that is used for stage.
 
                     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                        openshift.withCluster('https://osemaster.sbu.lab.eng.bos.redhat.com:8443', env.PASSWORD) {
+                        openshift.withCluster('https://openshift-ait.e2e.bos.redhat.com:8443', env.PASSWORD) {
                             openshift.withProject('lifecycle') {
                                 echo "What are we doing here? - ${openshift.project()}"
                             }
