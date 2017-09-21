@@ -5,4 +5,5 @@ project_viewer_role: view
 project_registry_viewer_role: registry-viewer
 production_registry_hostname: registry.starter-ca-central-1.openshift.com
 jenkins_serviceaccount_name: jenkins
+jenkins_volume_size: 2Gi
 state: present
