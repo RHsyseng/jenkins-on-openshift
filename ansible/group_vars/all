@@ -1,7 +1,7 @@
 project_name: lifecycle
 project_admin_role: admin
 project_editor_role: edit
-project_viewer_role: basic-users
+project_viewer_role: view
 project_registry_viewer_role: registry-viewer
 production_registry_hostname: registry.starter-ca-central-1.openshift.com
 jenkins_serviceaccount_name: jenkins
