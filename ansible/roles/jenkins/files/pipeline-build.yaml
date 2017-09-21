@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: jenkins-pipeline
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: "declarative-pipeline"
+  spec:
+    source:
+      type: "Git"
+      git:
+        uri: ${SOURCE_REPOSITORY_URL}
+        ref: "master"
+    strategy:
+      type: ${SOURCE_REPOSITORY_REF}
+      jenkinsPipelineStrategy:
+          jenkinsfilePath: Jenkinsfile
+parameters:
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: https://github.com/RHsyseng/jenkins-on-openshift.git
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: SOURCE_REPOSITORY_REF
+  value: master
