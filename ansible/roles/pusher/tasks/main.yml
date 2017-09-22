@@ -4,7 +4,7 @@
   register: central_registry_secret
   ignore_errors: true
 - name: Docker push central registry secret
-  command: "{{ oc }} secrets new-dockercfg push-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused -n {{ project_name }}"
+  command: "{{ oc }} secrets new-dockercfg push-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }} -n {{ project_name }}"
   when: central_registry_secret|failed
 - name: Link docker push central registry secret
   command: "{{ oc }} secrets link builder push-external-registry -n {{ project_name }}"
