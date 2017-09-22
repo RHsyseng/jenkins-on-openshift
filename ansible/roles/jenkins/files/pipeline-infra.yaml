@@ -2,12 +2,12 @@ apiVersion: v1
 kind: Template
 metadata:
   creationTimestamp: null
-  name: app-pipeline
+  name: jenkins-lifecycle
 objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: "app-pipeline"
+    name: "jenkins-lifecycle"
   spec:
     source:
       type: "Git"
@@ -15,9 +15,9 @@ objects:
         uri: ${SOURCE_REPOSITORY_URL}
         ref: ${SOURCE_REPOSITORY_REF}
     strategy:
-      type: "JenkinsPipeline"
+      type:
       jenkinsPipelineStrategy:
-          jenkinsfilePath: Jenkinsfile
+          jenkinsfilePath: jenkins/pipelines/Jenkinsfile
 parameters:
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL

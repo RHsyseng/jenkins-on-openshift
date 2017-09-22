@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                // ignore checkout part of excludedRegions
+                checkout([$class: 'GitSCM',
+                    branches: [[name: "*/multi-pipeline"]],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [[
+                        $class: 'PathRestriction',
+                        excludedRegions: '^ansible/.*\n^app/.*']],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/aweiteka/jenkins-on-openshift']]])
+            }
+        }
+        stage('Trigger build') {
+            steps {
+                openshiftBuild bldCfg: 'jenkins-custom'
+            }
+        }
+        stage('Trigger deployment') {
+            steps {
+                //openshiftDeploy depCfg: 'jenkins'
+                echo 'triggering deployment'
+            }
+        }
+    }
+}
