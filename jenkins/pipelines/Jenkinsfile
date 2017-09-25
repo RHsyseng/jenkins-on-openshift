@@ -2,8 +2,8 @@
 pipeline {
     agent any
     triggers {
+        // OpenShift will also trigger the pipeline if the upstream 'jenkins' image changes
         pollSCM('H/5 * * * *')
-        openshiftImageStream name: 'jenkins', namespace: 'openshift', tag: 'latest'
     }
     stages {
         stage('Checkout') {
