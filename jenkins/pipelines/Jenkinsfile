@@ -1,21 +1,23 @@
+// Manage Jenkins master service
 pipeline {
     agent any
     triggers {
         pollSCM('H/5 * * * *')
+        openshiftImageStream name: 'jenkins', namespace: 'openshift', tag: 'latest'
     }
     stages {
         stage('Checkout') {
             steps {
                 // ignore checkout part of excludedRegions
                 checkout([$class: 'GitSCM',
-                    branches: [[name: "*/multi-pipeline"]],
+                    branches: [[name: "refs/remotes/origin/master"]],
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [[
                         $class: 'PathRestriction',
                         excludedRegions: '^ansible/.*\n^app/.*']],
                     submoduleCfg: [],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/aweiteka/jenkins-on-openshift']]])
+                        url: 'https://github.com/RHsyseng/jenkins-on-openshift']]])
             }
         }
         stage('Trigger build') {
@@ -23,10 +25,14 @@ pipeline {
                 openshiftBuild bldCfg: 'jenkins-custom'
             }
         }
-        stage('Trigger deployment') {
+        stage('Verify build') {
             steps {
-                //openshiftDeploy depCfg: 'jenkins'
-                echo 'triggering deployment'
+                openshiftBuild bldCfg: 'jenkins-custom', waitTime: '240', waitUnit: 'sec'
+            }
+        }
+        stage('Verify deployment') {
+            steps {
+                openshiftVerifyDeployment depCfg: 'jenkins', waitTime: '360', waitUnit: 'sec'
             }
         }
     }
