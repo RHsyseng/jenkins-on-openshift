@@ -112,16 +112,12 @@ objects:
           persistentVolumeClaim:
             claimName: ${JENKINS_SERVICE_NAME}
     triggers:
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - jenkins
+    - type: "imageChange"
+      imageChange:
         from:
           kind: ImageStreamTag
-          name: ${JENKINS_IMAGE_STREAM_TAG}
+          name: jenkins-custom:latest
           namespace: ${NAMESPACE}
-        lastTriggeredImage: ""
-      type: ImageChange
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
