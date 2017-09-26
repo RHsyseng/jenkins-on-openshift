@@ -6,34 +6,17 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
     stages {
-        stage('Checkout') {
-            steps {
-                // ignore checkout part of excludedRegions
-                checkout([$class: 'GitSCM',
-                    branches: [[name: "refs/remotes/origin/master"]],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [[
-                        $class: 'PathRestriction',
-                        excludedRegions: '^ansible/.*\n^app/.*']],
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/RHsyseng/jenkins-on-openshift']]])
-            }
-        }
-        stage('Trigger build') {
+        stage('S2I build Jenkins with custom configuration') {
             steps {
                 openshiftBuild bldCfg: 'jenkins-custom'
             }
         }
-        stage('Verify build') {
-            steps {
-                openshiftBuild bldCfg: 'jenkins-custom', waitTime: '240', waitUnit: 'sec'
-            }
-        }
-        stage('Verify deployment') {
-            steps {
-                openshiftVerifyDeployment depCfg: 'jenkins', waitTime: '360', waitUnit: 'sec'
-            }
+    }
+    post {
+        failure {
+            mail to: 'aweiteka@redhat.com',
+            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Jenkins master build failed: ${env.BUILD_URL}"
         }
     }
 }

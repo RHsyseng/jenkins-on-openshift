@@ -27,6 +27,6 @@
 - name: Remove all Jenkins image build triggers
   command: "{{ oc }} set triggers bc/jenkins-custom --remove-all=true -n {{ project_name }}"
 - name: Create application pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/pipeline-build.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create Jenkins master pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/pipeline-infra.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
