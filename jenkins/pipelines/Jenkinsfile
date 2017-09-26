@@ -6,6 +6,20 @@ pipeline {
         pollSCM('H/5 * * * *')
     }
     stages {
+        stage('Checkout') {
+            steps {
+                // ignore checkout part of excludedRegions
+                checkout([$class: 'GitSCM',
+                    branches: [[name: "refs/remotes/origin/master"]],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [[
+                        $class: 'PathRestriction',
+                        excludedRegions: '^ansible/.*\n^app/.*']],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/RHsyseng/jenkins-on-openshift']]])
+            }
+        }
         stage('S2I build Jenkins with custom configuration') {
             steps {
                 openshiftBuild bldCfg: 'jenkins-custom'
