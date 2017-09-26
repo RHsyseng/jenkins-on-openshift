@@ -52,16 +52,7 @@ objects:
           namespace: openshift
       type: Source
     successfulBuildsHistoryLimit: 5
-    triggers:
-    - github:
-        secret: ${GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - generic:
-        secret: ${GENERIC_WEBHOOK_SECRET}
-      type: Generic
-    - type: ConfigChange
-    - imageChange: {}
-      type: ImageChange
+    triggers: {}
 parameters:
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL
