@@ -42,27 +42,27 @@ pipeline-model-api:1.1.9
 pipeline-model-declarative-agent:1.1.1
 pipeline-model-definition:1.1.9
 pipeline-model-extensions:1.1.9
-pipeline-rest-api
-pipeline-stage-step
+pipeline-rest-api:2.9
+pipeline-stage-step:2.2
 pipeline-stage-tags-metadata:1.1.9
-pipeline-stage-view
+pipeline-stage-view:2.9
 pipeline-utility-steps:1.4.1
 script-security:1.31
 ssh-credentials:1.13
 workflow-aggregator:2.5
-workflow-api
-workflow-basic-steps
-workflow-cps-global-lib
+workflow-api:2.20
+workflow-basic-steps:2.60
+workflow-cps-global-lib:2.9
 workflow-cps:2.40
-workflow-durable-task-step
+workflow-durable-task-step:2.15
 workflow-job:2.11.2
-workflow-multibranch
+workflow-multibranch:2.16
 workflow-remote-loader:1.2
 
 # This is the latest version that can be used with 2.46.3
 workflow-scm-step:2.5
-workflow-step-api
-workflow-support
+workflow-step-api:2.13
+workflow-support:2.14
 
 
 # If we need to monitor memory usage
