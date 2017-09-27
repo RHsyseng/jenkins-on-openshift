@@ -32,10 +32,10 @@ String createCredentialFromOpenShiftSecret(String id, HashMap secret) {
 
         secret.data.each { key, value ->
             if ( key.toLowerCase().matches("password|token")) {
-                password = value.decodeBase64()
+                password = new String(value.decodeBase64())
             }
             else {
-                username = value.decodeBase64()
+                username = new String(value.decodeBase64())
             }
         }
         return createCredentials(id, username, password, "Secret Synced from OpenShift")
