@@ -51,7 +51,7 @@ script-security:1.31
 ssh-credentials:1.13
 workflow-aggregator:2.5
 workflow-api:2.20
-workflow-basic-steps:2.60
+workflow-basic-steps:2.6
 workflow-cps-global-lib:2.9
 workflow-cps:2.40
 workflow-durable-task-step:2.15
