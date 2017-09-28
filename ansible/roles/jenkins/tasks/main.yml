@@ -1,3 +1,8 @@
+- name: Check if {{ registry_api_secret_name }} exists
+  command: "{{ oc }} get secret {{ registry_api_secret_name }} -n {{ project_name }}"
+  when: registry_api_secret_name is defined
+  register: registry_api_secret_exists
+  ignore_errors: true
 - name: Check if {{ stage_api_secret_name }} exists
   command: "{{ oc }} get secret {{ stage_api_secret_name }} -n {{ project_name }}"
   when: stage_api_secret_name is defined
@@ -8,6 +13,11 @@
   when: prod_api_secret_name is defined
   register: prod_api_secret_exists
   ignore_errors: true
+- name: Create secret {{ registry_api_secret_name }}
+  command: "{{ oc }} secret new-basicauth {{ registry_api_secret_name }} --password {{ hostvars['registry']['jenkinstoken'] }} -n {{ project_name }}"
+  when:
+    - registry_api_secret_exists|failed
+    - hostvars['registry']['jenkinstoken'] is defined
 - name: Create secret {{ stage_api_secret_name }}
   command: "{{ oc }} secret new-basicauth {{ stage_api_secret_name }} --password {{ hostvars['stage']['jenkinstoken'] }} -n {{ project_name }}"
   when:
