@@ -4,7 +4,7 @@
   register: pull_registry_secret
   ignore_errors: true
 - name: Docker pull registry secret
-  command: "{{ oc }} secrets new-dockercfg pull-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pulltoken'] }} --docker-email=unused -n {{ project_name }}"
+  command: "{{ oc }} secrets new-dockercfg pull-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pulltoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }} -n {{ project_name }}"
   when: pull_registry_secret|failed
 - name: Link docker pull registry secret
   command: "{{ oc }} secrets link default pull-external-registry --for=pull -n {{ project_name }}"
