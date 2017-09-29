@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: jenkins-base-image
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: "jenkins-base-image"
+  spec:
+    strategy:
+      type:
+      jenkinsPipelineStrategy:
+        jenkinsfile: |-
+            pipeline {
+                agent any
+
+                environment {
+                    currentBaseImg = ''
+                    latestBaseImg = ''
+                    rebuild = 'false'
+                    jenkinsBaseIsTag = "${JENKINS_BASE_IMAGE_TAG}"
+                    userInput = ''
+                }
+                stages {
+                    stage('Check base image version') {
+                        steps {
+                            //git url: 'https://github.com/RHsyseng/jenkins-on-openshift.git', poll: false
+                            script {
+                                openshift.withCluster() {
+                                    def jenkinsIsTag = openshift.selector( "istag/${jenkinsBaseIsTag}" )
+                                    jenkinsIsTag = jenkinsIsTag.object()
+                                    def jenkinsCustomBc = openshift.selector( 'bc/jenkins-custom' )
+                                    jenkinsCustomBc = jenkinsCustomBc.object()
+                                    echo "Last custom build number:\n${jenkinsCustomBc.status.lastVersion}"
+                                    latestBaseImg = "${jenkinsIsTag.image.dockerImageReference}"
+                                    def buildNumber = "${jenkinsCustomBc.status.lastVersion}"
+                                    def jenkinsCustomBuild = openshift.selector( "build/jenkins-custom-${buildNumber}" )
+                                    jenkinsCustomBuild = jenkinsCustomBuild.object()
+                                    currentBaseImg = "${jenkinsCustomBuild.spec.strategy.sourceStrategy.from.name}"
+
+                                    if ( latestBaseImg == currentBaseImg ){
+                                        echo "Current base image and latest base image are the same, ${currentBaseImg}."
+                                    }
+                                    else{
+                                        echo "Consider rebuilding using 'latest' base image.\n\nCurrent base image: ${currentBaseImg}\nLatest base image: ${latestBaseImg}"
+                                        rebuild = 'true'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    stage('Upgrade prompt') {
+                        steps {
+                            script {
+                                if (rebuild == 'true') {
+                                    userInput = input(
+                                        id: 'userInput', message: 'Upgrade base image?', submitterParameter: 'approverId')
+                                }
+                                echo "${userInput}"
+                                echo "${rebuild}"
+                                if (rebuild && userInput) {
+                                    build job: 'lifecycle-jenkins-lifecycle', wait: false
+                                }
+                            }
+                        }
+                    }
+                }
+                post {
+                    aborted {
+                        script {
+                            if (rebuild == 'true') {
+                                mail to: 'aweiteka@redhat.com',
+                                subject: "New Jenkins base image ${jenkinsBaseIsTag} available for approval",
+                                body: "A new Jenkins master base image is available. Visit ${JOB_DISPLAY_URL} to re-run this job and approve a new build.\n\nCurrent base image: ${currentBaseImg}\nLatest base image: ${latestBaseImg}"
+                            }
+                        }
+                    }
+                }
+            }
+    triggers:
+    - imageChange:
+        from:
+          kind: ImageStreamTag
+          name: ${JENKINS_BASE_IMAGE_TAG}
+          namespace: lifecycle
+      type: ImageChange
+parameters:
+- description: The Jenkins base image tag
+  displayName: Jenkins base image tag, e.g. 'jenkins:latest'
+  name: JENKINS_BASE_IMAGE_TAG
+  required: true
+  value: "jenkins:latest"
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: https://github.com/RHsyseng/jenkins-on-openshift.git
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: SOURCE_REPOSITORY_REF
+  value: master
