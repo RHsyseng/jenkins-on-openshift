@@ -18,13 +18,7 @@ objects:
       type: "JenkinsPipeline"
       jenkinsPipelineStrategy:
           jenkinsfilePath: Jenkinsfile
-    triggers:
-    - type: "imageChange"
-      imageChange:
-        from:
-          kind: ImageStreamTag
-          name: jenkins:latest
-          namespace: openshift
+    triggers: {}
 parameters:
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL

@@ -98,7 +98,7 @@ parameters:
   displayName: Base image project namespace, e.g. 'openshift'
   name: BASE_IMAGE_NAMESPACE
   required: true
-  value: "lifecycle"
+  value: "openshift"
 - description: The application buildconfig name
   displayName: The application buildconfig name, e.g. 'jenkins-custom'
   name: APP_BC
