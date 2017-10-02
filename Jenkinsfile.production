@@ -21,7 +21,7 @@ pipeline {
             }
             steps {
                 script {
-                    openshift.withCluster('https://open.paas.redhat.com', env.PRODUCTION_PSW) {
+                    openshift.withCluster('insecure://open.paas.redhat.com', env.PRODUCTION_PSW) {
                         openshift.withProject('lifecycle') {
                             // Apply the template object from JSON file
                             openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
@@ -48,7 +48,7 @@ pipeline {
             }
             steps {
                 script {
-                    openshift.withCluster('https://open.paas.redhat.com', env.PRODUCTION_PSW) {
+                    openshift.withCluster('insecure://open.paas.redhat.com', env.PRODUCTION_PSW) {
                         openshift.withProject('lifecycle') {
                             deploymentConfigs = createdObjects.narrow('dc')
                             deploymentConfigs.withEach {
@@ -70,4 +70,3 @@ pipeline {
 }
 
 // vim: ft=groovy
-
