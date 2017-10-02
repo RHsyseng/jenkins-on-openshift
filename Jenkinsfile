@@ -2,16 +2,13 @@
 
 pipeline {
     agent any
-    triggers {
-        pollSCM('H/5 * * * *')
-    }
     stages {
-
-        stage('Dev - MochaJS Test' ) {
+        stage('Dev - MochaJS Test') {
             agent {
                 label 'nodejs'
             }
             steps {
+
                 git url: 'https://github.com/openshift/nodejs-ex'
 
                 // Store the short sha to use with the ImageStreamTag
@@ -24,8 +21,11 @@ pipeline {
             }
         }
 
-        stage('Dev - OpenShift Configuration') {
+        stage('Dev - OpenShift Template') {
             steps {
+
+                git url: 'https://github.com/jcpowermac/jenkins-on-openshift', branch: 'template-mods'
+
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
@@ -33,99 +33,148 @@ pipeline {
                             // Apply the template object from JSON file
                             openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
 
-                            def createdObjects = openshift.apply(
-                                    openshift.process( "nodejs-mongo-persistent",
-                                                       "-p",
-                                                       "TAG=${env.GIT_COMMIT}",
-                                                       "REGISTRY=docker-registry.engineering.redhat.com",
-                                                       "PROJECT=lifecycle"))
-
-                            def buildConfigs = createdObjects.narrow('bc')
+                            createdObjects = openshift.apply(
+                                    openshift.process("nodejs-mongo-persistent",
+                                            "-p",
+                                            "TAG=${env.GIT_COMMIT}",
+                                            "REGISTRY=docker-registry.engineering.redhat.com",
+                                            "PROJECT=lifecycle"))
 
 
-                            buildConfigs.withEach {
-                                it.startBuild()
-                            }
-
-
-                            def builds = createdObjects.narrow('bc').related('builds')
-
-                            timeout(10) {
-                                builds.watch {
-                                    // Wait until a build object is available
-                                    return it.count() > 0
-                                }
-                                builds.untilEach {
-                                    // Wait until a build object is complete
-                                    return it.object().status.phase == "Complete"
-                                }
-                            }
-                }
-                echo "def deploymentConfigs = createdObjects.narrow('dc')"
-                script {
-                            openshift.verbose()
-                            def deploymentConfigs = createdObjects.narrow('dc')
-
-
-                            echo "deploymentConfigs.withEach {"
-                            deploymentConfigs.withEach {
-                                def rolloutManager = it.rollout()
-                                rolloutManager.latest()
-                            }
-
-
-                            echo "timeout(10)"
-
-                            timeout(10) {
-                                /* for each DeploymentConfig that was just
-                                 * created above get the related pod
-                                 * and wait until each is running
-                                 */
-                                deploymentConfigs.withEach {
-                                    it.related('pods').untilEach {
-                                        println( "${it.object().status.phase}" )
-                                        return it.object().status.phase == "Running"
-                                    }
-                                }
-                            }
-                            openshift.verbose(false)
-
-
-                            env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
                         }
                     }
                 }
             }
         }
-        stage('Dev - Test') {
+        stage('Dev - Build Image') {
             steps {
-                echo "Running dev test..."
+                script {
+                    openshift.withCluster() {
+                        openshift.withProject() {
+
+
+                            buildConfigs = createdObjects.narrow('bc')
+
+                            echo "${buildConfigs}"
+                            def build = null
+
+                            // there should only be one...
+                            buildConfigs.withEach {
+                                build = it.startBuild()
+                            }
+
+                            timeout(10) {
+                                build.watch {
+                                    // Wait until a build object is available
+                                    return it.count() > 0
+                                }
+                                build.untilEach {
+                                    // Wait until a build object is complete
+                                    return it.object().status.phase == "Complete"
+                                }
+                            }
+
+
+                            env.IMAGE_STREAM_NAME = createdObjects.narrow('is').object().metadata.name
+                            env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
+
+                            echo "${env.DEV_ROUTE}"
+                        }
+                    }
+                }
             }
         }
-        stage('Stage - OpenShift DeploymentConfig') {
+        stage('Dev - Rollout Latest') {
+            steps {
+                script {
+                    openshift.withCluster() {
+                        openshift.withProject() {
+                            deploymentConfigs = createdObjects.narrow('dc')
+                            deploymentConfigs.withEach {
+                                def rolloutManager = it.rollout()
+                                rolloutManager.latest()
+                            }
+
+                            timeout(10) {
+                                deploymentConfigs.withEach {
+                                    it.rollout().status("-w")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        stage('Dev - Tag') {
+            steps {
+                syncOpenShiftSecret 'registry-api'
+                script {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "registry-api", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+
+                        openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443', env.PASSWORD) {
+                            openshift.withProject('lifecycle') {
+                                env.VERSION = readFile('app/VERSION').trim()
+
+                                openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.GIT_COMMIT}", "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.VERSION}")
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        stage('Stage - OpenShift Template') {
             steps {
 
                 // This method syncOpenShiftSecret will extract an OpenShift secret
                 // and add it to a Jenkins Credential.
 
                 syncOpenShiftSecret 'stage-api'
+                git url: 'https://github.com/jcpowermac/jenkins-on-openshift', branch: 'template-mods'
                 script {
                     // Use that newly created Jenkins credential to connect to an external
                     // cluster that is used for stage.
 
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                        openshift.withCluster('https://openshift-ait.e2e.bos.redhat.com:8443', env.PASSWORD) {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage-api", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                        openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.PASSWORD) {
                             openshift.withProject('lifecycle') {
-                                echo "What are we doing here? - ${openshift.project()}"
+                                // Apply the template object from JSON file
+                                openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+
+                                createdObjects = openshift.apply(
+                                        openshift.process("nodejs-mongo-persistent",
+                                                "-p",
+                                                "TAG=${env.GIT_COMMIT}",
+                                                "REGISTRY=docker-registry.engineering.redhat.com",
+                                                "PROJECT=lifecycle"))
                             }
                         }
                     }
                 }
             }
         }
-        stage('Stage - Test') {
+        stage('Stage - Rollout') {
             steps {
-                echo "Stage - Test"
+                script {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage-api", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                        openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.PASSWORD) {
+                            openshift.withProject('lifecycle') {
+                                deploymentConfigs = createdObjects.narrow('dc')
+                                deploymentConfigs.withEach {
+                                    def rolloutManager = it.rollout()
+                                    rolloutManager.latest()
+                                }
+
+                                timeout(10) {
+                                    deploymentConfigs.withEach {
+                                        it.rollout().status("-w")
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
             }
         }
         stage('Production - Push Image') {
@@ -133,16 +182,8 @@ pipeline {
                 echo "Production - Push Image"
             }
         }
-        /*
-        stage('Production - Promote Image') {
-            steps {
-                script {
-                    env.PROMOTE_PROD = input message: 'Promote to Production'
-                }
-            }
-        }
-        */
     }
 }
 
 // vim: ft=groovy
+
