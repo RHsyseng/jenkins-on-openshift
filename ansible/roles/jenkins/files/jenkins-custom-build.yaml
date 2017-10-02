@@ -5,21 +5,6 @@ metadata:
   name: jenkins-custom
 objects:
 - apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      openshift.io/generated-by: OpenShiftNewBuild
-    creationTimestamp: null
-    generation: 1
-    labels:
-      build: jenkins-custom
-    name: jenkins-custom
-  spec:
-    lookupPolicy:
-      local: false
-  status:
-    dockerImageRepository: ""
-- apiVersion: v1
   kind: BuildConfig
   metadata:
     annotations:

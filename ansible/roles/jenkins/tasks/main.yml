@@ -32,11 +32,11 @@
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create Jenkins app
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-master.yaml --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param MEMORY_LIMIT=2Gi --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
-- name: Remove Jenkins app image change trigger
-  command: "{{ oc }} set triggers dc/jenkins --remove-all=true -n {{ project_name }}"
-- name: Remove all Jenkins image build triggers
-  command: "{{ oc }} set triggers bc/jenkins-custom --remove-all=true -n {{ project_name }}"
 - name: Create application pipeline
   shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create Jenkins master pipeline
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+- name: Create application base image pipeline
+  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml --param BASE_IMAGE_TAG='nodejs:6' --param APP_BC='nodejs-mongo-persistent' --param APP_NAME='nodejs-mongo-persistent' --param EMAIL_LIST='aweiteka@redhat.com jcallen@redhat.com' --param=APP_PIPELINE='lifecycle-app-lifecycle' -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+- name: Create Jenkins base image pipeline
+  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
