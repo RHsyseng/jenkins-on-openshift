@@ -29,6 +29,10 @@ openshift-sync:0.1.28
 
 parameterized-trigger:2.35.1
 
+credentials-binding:1.13
+credentials:2.1.16
+
+
 # Had multiple issues with the pipeline plugin starting without specifically
 # installing the pipeline-* and workflow-* plugins.  I would
 # have thought dependancy mapping would have caught this.

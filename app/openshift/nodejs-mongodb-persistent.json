@@ -77,8 +77,25 @@
       "metadata": {
         "name": "${NAME}",
         "annotations": {
-          "description": "Keeps track of changes in the application image"
+          "description": "Keeps track of changes in the application image",
+          "openshift.io/image.insecureRepository": "true"
         }
+      },
+      "spec": {
+        "tags": [
+            {
+                "from": {
+                    "kind": "DockerImage",
+                    "name": "${REGISTRY}/${PROJECT}/${NAME}:${TAG}"
+                },
+                "name": "${TAG}",
+                "importPolicy": {
+                    "insecure": true,
+                    "scheduled": true
+                }
+            }
+
+        ]
       }
     },
     {
@@ -118,30 +135,11 @@
         },
         "output": {
           "to": {
-            "kind": "ImageStreamTag",
-            "name": "${NAME}:${TAG}"
+            "kind": "DockerImage",
+            "name": "${REGISTRY}/${PROJECT}/${NAME}:${TAG}"
           }
         },
-        "triggers": [
-          {
-            "type": "ImageChange"
-          },
-          {
-            "type": "ConfigChange"
-          },
-          {
-            "type": "GitHub",
-            "github": {
-              "secret": "${GITHUB_WEBHOOK_SECRET}"
-            }
-          },
-          {
-            "type": "Generic",
-            "generic": {
-              "secret": "${GENERIC_WEBHOOK_SECRET}"
-            }
-          }
-        ],
+        "triggers": [],
         "postCommit": {
           "script": "npm test"
         }
@@ -174,9 +172,6 @@
                 "name": "${NAME}:${TAG}"
               }
             }
-          },
-          {
-            "type": "ConfigChange"
           }
         ],
         "replicas": 1,
@@ -331,9 +326,6 @@
                 "name": "mongodb:3.2"
               }
             }
-          },
-          {
-            "type": "ConfigChange"
           }
         ],
         "replicas": 1,
@@ -446,6 +438,18 @@
     {
       "name": "TAG",
       "displayName": "Image Stream Tag",
+      "description": "",
+      "required": true
+    },
+    {
+      "name": "REGISTRY",
+      "displayName": "Registry",
+      "description": "",
+      "required": true
+    },
+    {
+      "name": "PROJECT",
+      "displayName": "Registry project",
       "description": "",
       "required": true
     },

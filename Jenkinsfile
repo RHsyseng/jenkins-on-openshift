@@ -36,7 +36,17 @@ pipeline {
                             def createdObjects = openshift.apply(
                                     openshift.process( "nodejs-mongo-persistent",
                                                        "-p",
-                                                       "TAG=${env.GIT_COMMIT}" ))
+                                                       "TAG=${env.GIT_COMMIT}",
+                                                       "REGISTRY=docker-registry.engineering.redhat.com",
+                                                       "PROJECT=lifecycle"))
+
+                            def buildConfigs = createdObjects.narrow('bc')
+
+
+                            buildConfigs.withEach {
+                                it.startBuild()
+                            }
+
 
                             def builds = createdObjects.narrow('bc').related('builds')
 
@@ -50,18 +60,36 @@ pipeline {
                                     return it.object().status.phase == "Complete"
                                 }
                             }
+                }
+                echo "def deploymentConfigs = createdObjects.narrow('dc')"
+                script {
+                            openshift.verbose()
+                            def deploymentConfigs = createdObjects.narrow('dc')
+
+
+                            echo "deploymentConfigs.withEach {"
+                            deploymentConfigs.withEach {
+                                def rolloutManager = it.rollout()
+                                rolloutManager.latest()
+                            }
+
+
+                            echo "timeout(10)"
 
                             timeout(10) {
                                 /* for each DeploymentConfig that was just
                                  * created above get the related pod
                                  * and wait until each is running
                                  */
-                                createdObjects.narrow('dc').withEach {
+                                deploymentConfigs.withEach {
                                     it.related('pods').untilEach {
+                                        println( "${it.object().status.phase}" )
                                         return it.object().status.phase == "Running"
                                     }
                                 }
                             }
+                            openshift.verbose(false)
+
 
                             env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
                         }
