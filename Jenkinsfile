@@ -3,6 +3,17 @@
 pipeline {
     agent any
     stages {
+        stage('Create Credentials') {
+            steps {
+
+                // Create a Jenkins Credential from OpenShift Secret
+                // In this case the OpenShift service tokens for the
+                // other environments.
+                syncOpenShiftSecret 'registry-api'
+                syncOpenShiftSecret 'prod-api'
+                syncOpenShiftSecret 'stage-api'
+            }
+        }
         stage('Dev - MochaJS Test') {
             agent {
                 label 'nodejs'
@@ -20,11 +31,10 @@ pipeline {
                 sh 'npm test'
             }
         }
-
         stage('Dev - OpenShift Template') {
             steps {
 
-                git url: 'https://github.com/jcpowermac/jenkins-on-openshift', branch: 'template-mods'
+                git url: 'https://github.com/rhsyseng/jenkins-on-openshift', branch: 'master'
 
                 script {
                     openshift.withCluster() {
@@ -51,8 +61,6 @@ pipeline {
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
-
-
                             buildConfigs = createdObjects.narrow('bc')
 
                             echo "${buildConfigs}"
@@ -106,74 +114,69 @@ pipeline {
             }
         }
         stage('Dev - Tag') {
+            environment {
+                REGISTRY = credentials('registry-api')
+            }
             steps {
-                syncOpenShiftSecret 'registry-api'
                 script {
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "registry-api", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                    openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443',
+                            env.REGISTRY_PSW) {
+                        openshift.withProject('lifecycle') {
+                            env.VERSION = readFile('app/VERSION').trim()
 
-                        openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443', env.PASSWORD) {
-                            openshift.withProject('lifecycle') {
-                                env.VERSION = readFile('app/VERSION').trim()
-
-                                openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.GIT_COMMIT}", "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.VERSION}")
-                            }
+                            openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.GIT_COMMIT}",
+                                    "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.VERSION}")
                         }
                     }
-
                 }
             }
         }
         stage('Stage - OpenShift Template') {
+            environment {
+                STAGE = credentials('stage-api')
+            }
             steps {
-
-                // This method syncOpenShiftSecret will extract an OpenShift secret
-                // and add it to a Jenkins Credential.
-
-                syncOpenShiftSecret 'stage-api'
-                git url: 'https://github.com/jcpowermac/jenkins-on-openshift', branch: 'template-mods'
                 script {
-                    // Use that newly created Jenkins credential to connect to an external
-                    // cluster that is used for stage.
+                    openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.STAGE_PSW) {
+                        openshift.withProject('lifecycle') {
+                            // Apply the template object from JSON file
+                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
 
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage-api", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                        openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.PASSWORD) {
-                            openshift.withProject('lifecycle') {
-                                // Apply the template object from JSON file
-                                openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+                            createdObjects = openshift.apply(
+                                    openshift.process("nodejs-mongo-persistent",
+                                            "-p",
+                                            "TAG=${env.GIT_COMMIT}",
+                                            "REGISTRY=docker-registry.engineering.redhat.com",
+                                            "PROJECT=lifecycle"))
 
-                                createdObjects = openshift.apply(
-                                        openshift.process("nodejs-mongo-persistent",
-                                                "-p",
-                                                "TAG=${env.GIT_COMMIT}",
-                                                "REGISTRY=docker-registry.engineering.redhat.com",
-                                                "PROJECT=lifecycle"))
-                            }
+                            // The stage environment does not need buildconfigs
+                            createdObjects.narrow('bc').delete()
                         }
                     }
                 }
             }
         }
         stage('Stage - Rollout') {
+            environment {
+                STAGE = credentials('stage-api')
+            }
             steps {
                 script {
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "stage-api", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                        openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.PASSWORD) {
-                            openshift.withProject('lifecycle') {
-                                deploymentConfigs = createdObjects.narrow('dc')
-                                deploymentConfigs.withEach {
-                                    def rolloutManager = it.rollout()
-                                    rolloutManager.latest()
-                                }
+                    openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.STAGE_PSW) {
+                        openshift.withProject('lifecycle') {
+                            deploymentConfigs = createdObjects.narrow('dc')
+                            deploymentConfigs.withEach {
+                                def rolloutManager = it.rollout()
+                                rolloutManager.latest()
+                            }
 
-                                timeout(10) {
-                                    deploymentConfigs.withEach {
-                                        it.rollout().status("-w")
-                                    }
+                            timeout(10) {
+                                deploymentConfigs.withEach {
+                                    it.rollout().status("-w")
                                 }
                             }
                         }
                     }
-
                 }
             }
         }
