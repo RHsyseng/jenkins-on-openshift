@@ -21,24 +21,33 @@ objects:
                     latestBaseImg = 'null'
                     rebuild = 'null'
                     baseIsTag = "${BASE_IMAGE_TAG}"
+                    baseImgNamespace = "${BASE_IMAGE_NAMESPACE}"
                     userInput = 'null'
                     appName = "${APP_NAME}"
+                    appBcName = "${APP_BC}"
+                    appNamespace = "${APP_NAMESPACE}"
                     appPipeline = "${APP_PIPELINE}"
+                    baseImgNamespace = "${BASE_IMAGE_NAMESPACE}"
                 }
                 stages {
                     stage('Check base image version') {
                         steps {
                             script {
                                 openshift.withCluster() {
-                                    def isTag = openshift.selector( "istag/${baseIsTag}" )
-                                    isTag = isTag.object()
-                                    def appBc = openshift.selector( 'bc/${APP_BC}' )
-                                    appBc = appBc.object()
-                                    latestBaseImg = "${isTag.image.dockerImageReference}"
-                                    def buildNumber = "${appBc.status.lastVersion}"
-                                    def appBuild = openshift.selector( "build/${APP_BC}-${buildNumber}" )
-                                    appBuild = appBuild.object()
-                                    currentBaseImg = "${appBuild.spec.strategy.sourceStrategy.from.name}"
+                                    def isTag
+                                    openshift.withProject("${baseImgNamespace}") {
+                                        isTag = openshift.selector( "istag/${baseIsTag}" )
+                                        isTag = isTag.object()
+                                    }
+                                    openshift.withProject('lifecycle') {
+                                        def appBc = openshift.selector( "bc/${appBcName}'" )
+                                        appBc = appBc.object()
+                                        latestBaseImg = "${isTag.image.dockerImageReference}"
+                                        def buildNumber = "${appBc.status.lastVersion}"
+                                        def appBuild = openshift.selector( "build/${appBcName}-${buildNumber}" )
+                                        appBuild = appBuild.object()
+                                        currentBaseImg = "${appBuild.spec.strategy.sourceStrategy.from.name}"
+                                    }
                                 }
                             }
                             script {
@@ -109,6 +118,11 @@ parameters:
   name: APP_NAME
   required: true
   value: "jenkins"
+- description: Application project namespace
+  displayName: Application project namespace, e.g. 'lifecycle'
+  name: APP_NAMESPACE
+  required: true
+  value: "lifecycle"
 - description: "Space-separated recipient email list"
   displayName: Email list, e.g. 'foo@example.com bar@example.com'
   name: EMAIL_LIST
