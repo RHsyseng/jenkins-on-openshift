@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: ${APP_NAME}-base-image
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: "${APP_NAME}-base-image"
+  spec:
+    strategy:
+      type:
+      jenkinsPipelineStrategy:
+        jenkinsfile: |-
+            pipeline {
+                agent any
+
+                environment {
+                    currentBaseImg = 'null'
+                    latestBaseImg = 'null'
+                    rebuild = 'null'
+                    baseIsTag = "${BASE_IMAGE_TAG}"
+                    userInput = 'null'
+                    appName = "${APP_NAME}"
+                    appPipeline = "${APP_PIPELINE}"
+                }
+                stages {
+                    stage('Check base image version') {
+                        steps {
+                            script {
+                                openshift.withCluster() {
+                                    def isTag = openshift.selector( "istag/${baseIsTag}" )
+                                    isTag = isTag.object()
+                                    def appBc = openshift.selector( 'bc/${APP_BC}' )
+                                    appBc = appBc.object()
+                                    latestBaseImg = "${isTag.image.dockerImageReference}"
+                                    def buildNumber = "${appBc.status.lastVersion}"
+                                    def appBuild = openshift.selector( "build/${APP_BC}-${buildNumber}" )
+                                    appBuild = appBuild.object()
+                                    currentBaseImg = "${appBuild.spec.strategy.sourceStrategy.from.name}"
+                                }
+                            }
+                            script {
+                                if ( latestBaseImg == currentBaseImg ){
+                                    echo "Current base image and latest base image are the same, ${currentBaseImg}."
+                                }
+                                else{
+                                    echo "Consider rebuilding using 'latest' base image.\n\nCurrent base image: ${currentBaseImg}\nLatest base image: ${latestBaseImg}"
+                                    rebuild = 'true'
+                                }
+                            }
+                        }
+                    }
+                    stage('Upgrade prompt') {
+                        steps {
+                            script {
+                                if (rebuild == 'true') {
+                                    timeout(time: 15, unit: 'SECONDS') {
+                                        userInput = input(
+                                            id: 'userInput', message: 'Upgrade base image?')
+                                    }
+                                }
+                                if (rebuild == 'true' && userInput != 'null') {
+                                    build job: "${appPipeline}", wait: false
+                                    //echo "rebuilding job ${appPipeline}"
+                                }
+                            }
+                        }
+                    }
+                }
+                post {
+                    aborted {
+                        script {
+                            if (rebuild == 'true') {
+                                mail to: "${EMAIL_LIST}",
+                                subject: "New ${appName} base image ${baseIsTag} available for approval",
+                                body: "A new ${appName} base image is available. Visit ${JOB_DISPLAY_URL} to re-run this job ('Build Now') and approve a new build.\n\nCurrent base image: ${currentBaseImg}\nLatest base image: ${latestBaseImg}"
+                            }
+                        }
+                    }
+                }
+            }
+    triggers:
+    - imageChange:
+        from:
+          kind: ImageStreamTag
+          name: ${BASE_IMAGE_TAG}
+          namespace: ${BASE_IMAGE_NAMESPACE}
+      type: ImageChange
+parameters:
+- description: The base image tag
+  displayName: Base image tag, e.g. 'jenkins:latest'
+  name: BASE_IMAGE_TAG
+  required: true
+  value: "jenkins:latest"
+- description: The base image project namespace
+  displayName: Base image project namespace, e.g. 'openshift'
+  name: BASE_IMAGE_NAMESPACE
+  required: true
+  value: "lifecycle"
+- description: The application buildconfig name
+  displayName: The application buildconfig name, e.g. 'jenkins-custom'
+  name: APP_BC
+  required: true
+  value: "jenkins-custom"
+- description: Application name
+  displayName: Application Name, e.g. 'jenkins'
+  name: APP_NAME
+  required: true
+  value: "jenkins"
+- description: "Space-separated recipient email list"
+  displayName: Email list, e.g. 'foo@example.com bar@example.com'
+  name: EMAIL_LIST
+  required: true
+  value: "aweiteka@redhat.com"
+- description: Application pipeline name
+  displayName: Application pipeline name, e.g. 'jenkins-lifecycle'
+  name: APP_PIPELINE
+  required: true
+  value: "lifecycle-jenkins-lifecycle"
