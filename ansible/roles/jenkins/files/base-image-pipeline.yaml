@@ -27,7 +27,6 @@ objects:
                     appBcName = "${APP_BC}"
                     appNamespace = "${APP_NAMESPACE}"
                     appPipeline = "${APP_PIPELINE}"
-                    baseImgNamespace = "${BASE_IMAGE_NAMESPACE}"
                 }
                 stages {
                     stage('Check base image version') {
@@ -39,8 +38,8 @@ objects:
                                         isTag = openshift.selector( "istag/${baseIsTag}" )
                                         isTag = isTag.object()
                                     }
-                                    openshift.withProject('lifecycle') {
-                                        def appBc = openshift.selector( "bc/${appBcName}'" )
+                                    openshift.withProject("${appNamespace}") {
+                                        def appBc = openshift.selector( "bc/${appBcName}" )
                                         appBc = appBc.object()
                                         latestBaseImg = "${isTag.image.dockerImageReference}"
                                         def buildNumber = "${appBc.status.lastVersion}"
@@ -55,7 +54,7 @@ objects:
                                     echo "Current base image and latest base image are the same, ${currentBaseImg}."
                                 }
                                 else{
-                                    echo "Consider rebuilding using 'latest' base image.\n\nCurrent base image: ${currentBaseImg}\nLatest base image: ${latestBaseImg}"
+                                    echo "Consider rebuilding using 'latest' base image.\n\nCurrent deployed base image is ${currentBaseImg}\nLatest available base image is ${latestBaseImg}"
                                     rebuild = 'true'
                                 }
                             }
