@@ -88,7 +88,7 @@
                     "kind": "DockerImage",
                     "name": "${REGISTRY}/${PROJECT}/${NAME}:${TAG}"
                 },
-                "name": "${TAG}",
+                "name": "${IMAGESTREAM_TAG}",
                 "importPolicy": {
                     "insecure": true,
                     "scheduled": true
@@ -163,13 +163,13 @@
           {
             "type": "ImageChange",
             "imageChangeParams": {
-              "automatic": true,
+              "automatic": false,
               "containerNames": [
                 "nodejs-mongo-persistent"
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "${NAME}:${TAG}"
+                "name": "${NAME}:${IMAGESTREAM_TAG}"
               }
             }
           }
@@ -437,6 +437,12 @@
     },
     {
       "name": "TAG",
+      "displayName": "Image Stream Tag",
+      "description": "",
+      "required": true
+    },
+    {
+      "name": "IMAGESTREAM_TAG",
       "displayName": "Image Stream Tag",
       "description": "",
       "required": true

@@ -34,9 +34,11 @@ pipeline {
         stage('Dev - OpenShift Template') {
             steps {
 
-                git url: 'https://github.com/rhsyseng/jenkins-on-openshift', branch: 'master'
+                //git url: 'https://github.com/rhsyseng/jenkins-on-openshift', branch: 'master'
 
                 script {
+                    env.VERSION = readFile('app/VERSION').trim()
+                    env.TAG = "${env.VERSION}-${env.BUILD_NUMBER}"
                     openshift.withCluster() {
                         openshift.withProject() {
 
@@ -46,7 +48,8 @@ pipeline {
                             createdObjects = openshift.apply(
                                     openshift.process("nodejs-mongo-persistent",
                                             "-p",
-                                            "TAG=${env.GIT_COMMIT}",
+                                            "TAG=${env.TAG}",
+                                            "IMAGESTREAM_TAG=latest",
                                             "REGISTRY=docker-registry.engineering.redhat.com",
                                             "PROJECT=lifecycle"))
 
@@ -113,6 +116,7 @@ pipeline {
                 }
             }
         }
+        /*
         stage('Dev - Tag') {
             environment {
                 REGISTRY = credentials('registry-api')
@@ -122,7 +126,6 @@ pipeline {
                     openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443',
                             env.REGISTRY_PSW) {
                         openshift.withProject('lifecycle') {
-                            env.VERSION = readFile('app/VERSION').trim()
 
                             openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.GIT_COMMIT}",
                                     "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.VERSION}")
@@ -131,6 +134,7 @@ pipeline {
                 }
             }
         }
+        */
         stage('Stage - OpenShift Template') {
             environment {
                 STAGE = credentials('stage-api')
@@ -145,7 +149,8 @@ pipeline {
                             createdObjects = openshift.apply(
                                     openshift.process("nodejs-mongo-persistent",
                                             "-p",
-                                            "TAG=${env.GIT_COMMIT}",
+                                            "TAG=${env.TAG}",
+                                            "IMAGESTREAM_TAG=latest",
                                             "REGISTRY=docker-registry.engineering.redhat.com",
                                             "PROJECT=lifecycle"))
 
@@ -180,9 +185,9 @@ pipeline {
                 }
             }
         }
-        stage('Production - Push Image') {
+        stage('Stage - Testing') {
             steps {
-                echo "Production - Push Image"
+                echo "Testing..."
             }
         }
     }
