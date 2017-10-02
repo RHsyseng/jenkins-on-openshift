@@ -1,0 +1,73 @@
+@Library('Utils') _
+
+pipeline {
+    agent any
+    parameters {
+        string(name: 'VERSION', defaultValue: '', description: 'What version to deploy')
+    }
+    stages {
+        stage('Create Credentials') {
+            steps {
+
+                // Create a Jenkins Credential from OpenShift Secret
+                // In this case the OpenShift service tokens for the
+                // other environments.
+                syncOpenShiftSecret 'prod-api'
+            }
+        }
+        stage('Production - OpenShift Template') {
+            environment {
+                PRODUCTION = credentials('prod-api')
+            }
+            steps {
+                script {
+                    openshift.withCluster('https://open.paas.redhat.com', env.PRODUCTION_PSW) {
+                        openshift.withProject('lifecycle') {
+                            // Apply the template object from JSON file
+                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+                            env.VERSION = readFile('app/VERSION').trim()
+
+                            createdObjects = openshift.apply(
+                                    openshift.process("nodejs-mongo-persistent",
+                                            "-p",
+                                            "TAG=${params.VERSION}",
+                                            "IMAGESTREAM_TAG=${params.VERSION}",
+                                            "REGISTRY=docker-registry.engineering.redhat.com",
+                                            "PROJECT=lifecycle"))
+
+                            // The production environment does not need buildconfigs
+                            createdObjects.narrow('bc').delete()
+                        }
+                    }
+                }
+            }
+        }
+        stage('Production - Rollout') {
+            environment {
+                PRODUCTION = credentials('prod-api')
+            }
+            steps {
+                script {
+                    openshift.withCluster('https://open.paas.redhat.com', env.PRODUCTION_PSW) {
+                        openshift.withProject('lifecycle') {
+                            deploymentConfigs = createdObjects.narrow('dc')
+                            deploymentConfigs.withEach {
+                                def rolloutManager = it.rollout()
+                                rolloutManager.latest()
+                            }
+
+                            timeout(10) {
+                                deploymentConfigs.withEach {
+                                    it.rollout().status("-w")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// vim: ft=groovy
+
