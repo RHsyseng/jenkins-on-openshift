@@ -52,12 +52,41 @@ String createCredentials(String id = null, String username, String password, Str
         if (id == null) {
             id = java.util.UUID.randomUUID().toString()
         }
-        Credentials c = (Credentials) new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, id, description, username, password)
-        SystemCredentialsProvider.getInstance().getStore().addCredentials(Domain.global(), c)
+
+        com.cloudbees.plugins.credentials.Credentials replacement = (com.cloudbees.plugins.credentials.Credentials) new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                id, description, username, password)
+
+        com.cloudbees.plugins.credentials.Credentials current = findCredentials(id)
+
+        if( current == null ) {
+            SystemCredentialsProvider.getInstance().getStore().addCredentials(Domain.global(), replacement)
+        }
+        else {
+            if( current.password != password ) {
+                SystemCredentialsProvider.getInstance().getStore().updateCredentials(Domain.global(), current, replacement)
+            }
+        }
+
         return id
     }
     catch (all) {
         Logger.getLogger("com.redhat.Utils").log(Level.SEVERE, all.toString())
         throw all
     }
+}
+
+/**
+ * https://wiki.jenkins.io/display/JENKINS/Printing+a+list+of+credentials+and+their+IDs
+ */
+
+@NonCPS
+com.cloudbees.plugins.credentials.Credentials findCredentials(String id) {
+    def creds = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+            com.cloudbees.plugins.credentials.common.StandardUsernameCredentials.class,
+            Jenkins.instance,
+            null,
+            null
+    )
+
+    return (com.cloudbees.plugins.credentials.Credentials) creds.find { it.id == id }
 }
