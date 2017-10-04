@@ -8,12 +8,7 @@ objects:
   kind: ImageStream
   metadata:
     name: jenkins-custom
-  spec:
-    tags:
-      - name: latest
-        from:
-          kind: DockerImage
-          name: docker-registry.engineering.redhat.com/lifecycle/jenkins-custom:latest
+  spec: {}
 - apiVersion: v1
   kind: BuildConfig
   metadata:
