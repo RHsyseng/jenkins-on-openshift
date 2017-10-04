@@ -17,7 +17,7 @@ objects:
     strategy:
       type: "JenkinsPipeline"
       jenkinsPipelineStrategy:
-          jenkinsfilePath: Jenkinsfile.production
+          jenkinsfilePath: Jenkinsfile.release
     triggers: {}
 parameters:
 - description: The URL of the repository with your application source code.

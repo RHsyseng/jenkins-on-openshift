@@ -17,7 +17,7 @@ This repo has 3 primary components:
 ├── app                      # target application being deployed
 ├── jenkins                  # Jenkins configuration
 ├── Jenkinsfile              # Main application pipeline
-├── Jenkinsfile.production   # Production release pipeline
+├── Jenkinsfile.release      # Production release pipeline
 ├── src                      # Jenkins library code
 ├── Vagrantfile              # Vagrantfile for running RHEL-based clients, oc and ansible-playbook
 └── vars                     # Jenkins groovy method for Utils library
