@@ -1,4 +1,27 @@
-# jenkins-on-openshift
+# Jenkins on OpenShift
+
+**Using Jenkins to Control Application Promotion between OpenShift Clusters**
+
+## Overview
+
+This repo has 3 primary components:
+
+- application: code to deploy the example application
+- ansible: configuration for the OpenShift environments and Jenkins pipeline bootstrapping
+- jenkins: Jenkins master configuration and declarative Jenkinsfiles
+
+## Layout
+
+```
+├── ansible                  # ansible playbooks to configure clusters, create openshift objects
+├── app                      # target application being deployed
+├── jenkins                  # Jenkins configuration
+├── Jenkinsfile              # Main application pipeline
+├── Jenkinsfile.production   # Production release pipeline
+├── src                      # Jenkins library code
+├── Vagrantfile              # Vagrantfile for running RHEL-based clients, oc and ansible-playbook
+└── vars                     # Jenkins groovy method for Utils library
+```
 
 ## Vagrant
 
