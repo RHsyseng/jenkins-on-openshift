@@ -2,22 +2,57 @@
 
 pipeline {
     agent any
-    parameters {
-        string(name: 'VERSION', defaultValue: '', description: 'What version to deploy')
-    }
     stages {
         stage('Create Credentials') {
             steps {
-
+                checkout scm
                 // Create a Jenkins Credential from OpenShift Secret
                 // In this case the OpenShift service tokens for the
                 // other environments.
                 syncOpenShiftSecret 'prod-api'
+                syncOpenShiftSecret 'registry-api'
+            }
+        }
+        stage('Production - Tag') {
+            environment {
+                REGISTRY = credentials('registry-api')
+                IMAGE_STREAM_NAME = 'nodejs-mongo-persistent'
+                RELEASE_VERSION = readFile('app/VERSION').trim()
+            }
+            steps {
+                script {
+                    timeout(time: 120, unit: 'SECONDS') {
+                        def userInput = input(
+                           id: 'userInput', message: "Enter build to release as version ${env.RELEASE_VERSION}", parameters: [
+                           [$class: 'StringParameterDefinition', defaultValue: '', description: 'Build version image tag, e.g. 1.3-8', name: 'buildVersion']
+                        ])
+                    }
+                    echo "Releasing build ${userInput} as ${env.RELEASE_VERSION}"
+                    openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443', env.REGISTRY_PSW) {
+                        openshift.withProject('lifecycle') {
+                            def istagSelector = openshift.selector("istag", "nodejs-mongo-persistent:${userInput}")
+                            if (!istagSelector.exists()) {
+                                echo "Imagestream tag ${userInput} does not exist in registry"
+                                currentBuild.result = 'ABORTED'
+                            }
+                        }
+                    }
+
+                    openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443', env.REGISTRY_PSW) {
+                        openshift.withProject('lifecycle') {
+                            openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${userInput}",
+                                    "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.RELEASE_VERSION}")
+                            openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${userInput}",
+                                    "${openshift.project()}/${env.IMAGE_STREAM_NAME}:latest")
+                        }
+                    }
+                }
             }
         }
         stage('Production - OpenShift Template') {
             environment {
                 PRODUCTION = credentials('prod-api')
+                RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
                 script {
@@ -25,13 +60,12 @@ pipeline {
                         openshift.withProject('lifecycle') {
                             // Apply the template object from JSON file
                             openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
-                            env.VERSION = readFile('app/VERSION').trim()
 
                             createdObjects = openshift.apply(
                                     openshift.process("nodejs-mongo-persistent",
                                             "-p",
-                                            "TAG=${params.VERSION}",
-                                            "IMAGESTREAM_TAG=${params.VERSION}",
+                                            "TAG=${env.RELEASE_VERSION}",
+                                            "IMAGESTREAM_TAG=${env.RELEASE_VERSION}",
                                             "REGISTRY=docker-registry.engineering.redhat.com",
                                             "PROJECT=lifecycle"))
 
@@ -51,20 +85,29 @@ pipeline {
                     openshift.withCluster('insecure://open.paas.redhat.com', env.PRODUCTION_PSW) {
                         openshift.withProject('lifecycle') {
                             deploymentConfigs = createdObjects.narrow('dc')
-                            deploymentConfigs.withEach {
-                                def rolloutManager = it.rollout()
-                                rolloutManager.latest()
-                            }
+                            nodedc = deploymentConfigs.selector("dc", "nodejs-mongo-persistent")
+                            def rolloutManager = nodedc.rollout()
+                            rolloutManager.latest()
 
                             timeout(10) {
-                                deploymentConfigs.withEach {
-                                    it.rollout().status("-w")
-                                }
+                                nodedc.rollout().status("-w")
                             }
                         }
                     }
                 }
             }
+        }
+    }
+    post {
+        success {
+            mail to: "aweiteka@redhat.com",
+            subject: "NodeJS version ${env.RELEASE_VERSION} released to production",
+            body: "Visit ${BUILD_URL} for details."
+        }
+        failure {
+            mail to: "aweiteka@redhat.com",
+            subject: "Failed production release of NodeJS version ${env.RELEASE_VERSION}",
+            body: "Visit ${BUILD_URL} for details."
         }
     }
 }
