@@ -2,6 +2,13 @@
 
 pipeline {
     agent any
+
+    environment {
+        IMAGE_STREAM_TAG = "latest"
+        REGISTRY = "docker-registry.engineering.redhat.com"
+        PROJECT = "lifecycle"
+        STAGE_URI = "insecure://openshift-ait.e2e.bos.redhat.com:8443"
+    }
     stages {
         stage('Create Credentials') {
             steps {
@@ -10,7 +17,6 @@ pipeline {
                 // In this case the OpenShift service tokens for the
                 // other environments.
                 syncOpenShiftSecret 'registry-api'
-                syncOpenShiftSecret 'prod-api'
                 syncOpenShiftSecret 'stage-api'
             }
         }
@@ -19,13 +25,8 @@ pipeline {
                 label 'nodejs'
             }
             steps {
-
                 git url: 'https://github.com/openshift/nodejs-ex'
-
-                // Store the short sha to use with the ImageStreamTag
-                script {
-                    env.GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-                }
+                //dir('app')
 
                 sh 'npm install'
                 sh 'npm test'
@@ -33,8 +34,6 @@ pipeline {
         }
         stage('Dev - OpenShift Template') {
             steps {
-
-                //git url: 'https://github.com/rhsyseng/jenkins-on-openshift', branch: 'master'
 
                 script {
                     env.VERSION = readFile('app/VERSION').trim()
@@ -45,13 +44,14 @@ pipeline {
                             // Apply the template object from JSON file
                             openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
 
+
                             createdObjects = openshift.apply(
                                     openshift.process("nodejs-mongo-persistent",
                                             "-p",
                                             "TAG=${env.TAG}",
-                                            "IMAGESTREAM_TAG=latest",
-                                            "REGISTRY=docker-registry.engineering.redhat.com",
-                                            "PROJECT=lifecycle"))
+                                            "IMAGESTREAM_TAG=${env.IMAGE_STREAM_TAG}",
+                                            "REGISTRY=${env.REGISTRY}",
+                                            "PROJECT=${env.PROJECT}"))
 
 
                         }
@@ -66,7 +66,6 @@ pipeline {
                         openshift.withProject() {
                             buildConfigs = createdObjects.narrow('bc')
 
-                            echo "${buildConfigs}"
                             def build = null
 
                             // there should only be one...
@@ -102,8 +101,9 @@ pipeline {
                         openshift.withProject() {
                             deploymentConfigs = createdObjects.narrow('dc')
                             deploymentConfigs.withEach {
-                                def rolloutManager = it.rollout()
-                                rolloutManager.latest()
+                                if (!it.name().startsWith("mongo")) {
+                                    it.rollout().latest()
+                                }
                             }
 
                             timeout(10) {
@@ -116,33 +116,14 @@ pipeline {
                 }
             }
         }
-        /*
-        stage('Dev - Tag') {
-            environment {
-                REGISTRY = credentials('registry-api')
-            }
-            steps {
-                script {
-                    openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443',
-                            env.REGISTRY_PSW) {
-                        openshift.withProject('lifecycle') {
-
-                            openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.GIT_COMMIT}",
-                                    "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.VERSION}")
-                        }
-                    }
-                }
-            }
-        }
-        */
         stage('Stage - OpenShift Template') {
             environment {
                 STAGE = credentials('stage-api')
             }
             steps {
                 script {
-                    openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.STAGE_PSW) {
-                        openshift.withProject('lifecycle') {
+                    openshift.withCluster(env.STAGE_URI, env.STAGE_PSW) {
+                        openshift.withProject(env.PROJECT) {
                             // Apply the template object from JSON file
                             openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
 
@@ -150,9 +131,9 @@ pipeline {
                                     openshift.process("nodejs-mongo-persistent",
                                             "-p",
                                             "TAG=${env.TAG}",
-                                            "IMAGESTREAM_TAG=latest",
-                                            "REGISTRY=docker-registry.engineering.redhat.com",
-                                            "PROJECT=lifecycle"))
+                                            "IMAGESTREAM_TAG=${IMAGE_STREAM_TAG}",
+                                            "REGISTRY=${REGISTRY}",
+                                            "PROJECT=${PROJECT}"))
 
                             // The stage environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()
@@ -167,12 +148,13 @@ pipeline {
             }
             steps {
                 script {
-                    openshift.withCluster('insecure://openshift-ait.e2e.bos.redhat.com:8443', env.STAGE_PSW) {
-                        openshift.withProject('lifecycle') {
+                    openshift.withCluster(env.STAGE_URI, env.STAGE_PSW) {
+                        openshift.withProject(env.PROJECT) {
                             deploymentConfigs = createdObjects.narrow('dc')
                             deploymentConfigs.withEach {
-                                def rolloutManager = it.rollout()
-                                rolloutManager.latest()
+                                if (!it.name().startsWith("mongo")) {
+                                    it.rollout().latest()
+                                }
                             }
 
                             timeout(10) {
@@ -183,11 +165,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        stage('Stage - Testing') {
-            steps {
-                echo "Testing..."
             }
         }
     }
