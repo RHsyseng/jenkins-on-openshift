@@ -29,18 +29,27 @@
     - prod_api_secret_exists|failed
     - hostvars['prod']['jenkinstoken'] is defined
 - name: Create custom Jenkins source-to-image build
-  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
 - name: Create Jenkins app
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-master.yaml --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param MEMORY_LIMIT=2Gi --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
 - name: Create application pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
 - name: Create release pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/release-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/release-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
 - name: Create Jenkins master pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
 - name: Create application base image pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml --param BASE_IMAGE_TAG='nodejs:6' --param APP_BC='nodejs-mongo-persistent' --param APP_NAME='nodejs-mongo-persistent' --param EMAIL_LIST='aweiteka@redhat.com jcallen@redhat.com' --param=APP_PIPELINE='lifecycle-app-lifecycle' -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml --param BASE_IMAGE_TAG='nodejs:6' --param APP_BC='nodejs-mongo-persistent' --param APP_NAME='nodejs-mongo-persistent' --param EMAIL_LIST='aweiteka@redhat.com jcallen@redhat.com' --param=APP_PIPELINE='lifecycle-app-lifecycle' -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
 - name: Create Jenkins base image pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+- name: Get last jenkins-custom build number
+  command: "{{ oc }} get bc jenkins-custom --template '{{ '{{' }} .status.lastVersion {{ '}}' }}'"
+  register: jenkins_custom_build_number
+- name: Get last jenkins-custom build status
+  command: "{{ oc }} get build jenkins-custom-{{ jenkins_custom_build_number.stdout }} --template '{{ '{{' }} .status.phase {{ '}}' }}'"
+  register: jenkins_custom_build_status
+  ignore_errors: true
 - name: Start jenkins-custom build
   command: "{{ oc }} start-build jenkins-custom"
+  when: jenkins_custom_build_status.stdout != 'Running'
+  ignore_errors: true
