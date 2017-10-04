@@ -64,7 +64,7 @@ objects:
                         steps {
                             script {
                                 if (rebuild == 'true') {
-                                    timeout(time: 15, unit: 'SECONDS') {
+                                    timeout(60) {
                                         userInput = input(
                                             id: 'userInput', message: 'Upgrade base image?')
                                     }

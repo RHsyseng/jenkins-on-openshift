@@ -21,7 +21,7 @@ pipeline {
             }
             steps {
                 script {
-                    timeout(time: 120, unit: 'SECONDS') {
+                    timeout(120) {
                         def userInput = input(
                            id: 'userInput', message: "Enter build to release as version ${env.RELEASE_VERSION}", parameters: [
                            [$class: 'StringParameterDefinition', defaultValue: '', description: 'Build version image tag, e.g. 1.3-8', name: 'buildVersion']
