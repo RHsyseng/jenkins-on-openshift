@@ -5,6 +5,16 @@ metadata:
   name: jenkins-custom
 objects:
 - apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: jenkins-custom
+  spec:
+    tags:
+      - name: latest
+        from:
+          kind: DockerImage
+          name: docker-registry.engineering.redhat.com/lifecycle/jenkins-custom:latest
+- apiVersion: v1
   kind: BuildConfig
   metadata:
     annotations:

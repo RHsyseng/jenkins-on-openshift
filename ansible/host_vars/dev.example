@@ -5,3 +5,12 @@ oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server={{ clusterho
 registry_api_secret_name: registry-api
 stage_api_secret_name: stage-api
 prod_api_secret_name: prod-api
+
+admin_users:
+  - user1
+  - user2
+editor_users:
+viewer_users:
+deprecated_admin_users:
+deprecated_editor_users:
+deprecated_viewer_users:

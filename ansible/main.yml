@@ -9,6 +9,8 @@
     - role: jenkins
     - role: pusher
 - name: Setup registry tokens
-  hosts: stage
+  hosts:
+    - stage
+    - prod
   roles:
     - role: puller
