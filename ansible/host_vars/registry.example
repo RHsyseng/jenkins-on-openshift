@@ -1,6 +1,6 @@
-clusterhost: https://registry.example.com:8443
+clusterhost: registry.example.com:8443
 token: eyJhbGciOiJSUzI1...q6vB3PLizZIMmnA
-oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server={{ clusterhost }}
+oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server=https://{{ clusterhost }}
 
 admin_users:
 editor_users:
@@ -12,4 +12,3 @@ deprecated_editor_users:
 deprecated_viewer_users:
 
 jenkins_automation_openshift_role: edit
-api_secret_name: registry-api

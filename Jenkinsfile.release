@@ -26,7 +26,7 @@ pipeline {
                     }
                     echo "Releasing build ${userInput} as ${env.RELEASE_VERSION}"
                     openshift.withCluster("${params.OPENSHIFT_REGISTRY_URI}", env.REGISTRY_PSW) {
-                        openshift.withProject("${REGISTRY_PROJECT}") {
+                        openshift.withProject("${params.REGISTRY_PROJECT}") {
                             def istagSelector = openshift.selector("istag", "${params.IMAGE_STREAM_NAME}:${userInput}")
                             if (!istagSelector.exists()) {
                                 echo "Imagestream tag ${userInput} does not exist in registry"

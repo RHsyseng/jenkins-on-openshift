@@ -72,15 +72,15 @@ parameters:
 - description: "Registry hostname that images are pushed to"
   name: REGISTRY_URI
   required: true
-  value: "docker-registry.engineering.redhat.com"
+  value: "registry.example.com:5000"
 - description: "OpenShift Registry hostname"
   name: OPENSHIFT_REGISTRY_URI
   required: true
-  value: "insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443"
+  value: "insecure://registry.example.com:8443"
 - description: "Production cluster hostname"
   name: PROD_URI
   required: true
-  value: "insecure://origin-ait.e2e.bos.redhat.com:8443"
+  value: "insecure://production.example.com:8443"
 - description: Production project
   name: PROD_PROJECT
   required: true
@@ -100,4 +100,4 @@ parameters:
 - description: Comma-separated email notification list
   name: NOTIFY_EMAIL_LIST
   required: true
-  value: "aweiteka@redhat.com"
+  value: "noreply@example.com"

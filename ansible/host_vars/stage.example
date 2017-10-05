@@ -1,9 +1,8 @@
-clusterhost: https://stage.example.com:8443
+clusterhost: stage.example.com:8443
 token: eyJhbGciOiJSUzI1N...uopaWYtJZeyI68td5acu6eg59bQ5A8eI08xQ
-oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server={{ clusterhost }}
+oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server=https://{{ clusterhost }}
 
 jenkins_automation_openshift_role: edit
-api_secret_name: stage-api
 
 admin_users:
   - user1
