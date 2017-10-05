@@ -9,14 +9,13 @@ pipeline {
                 // Create a Jenkins Credential from OpenShift Secret
                 // In this case the OpenShift service tokens for the
                 // other environments.
-                syncOpenShiftSecret 'prod-api'
-                syncOpenShiftSecret 'registry-api'
+                syncOpenShiftSecret "${params.PROD_SECRET_NAME}"
+                syncOpenShiftSecret "${params.REGISTRY_SECRET_NAME}"
             }
         }
         stage('Production - Tag') {
             environment {
-                REGISTRY = credentials('registry-api')
-                IMAGE_STREAM_NAME = 'nodejs-mongo-persistent'
+                REGISTRY = credentials("${params.REGISTRY_SECRET_NAME}")
                 RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
@@ -26,9 +25,9 @@ pipeline {
                         userInput = input(message: "Enter build to release as version ${env.RELEASE_VERSION}", parameters: [string(defaultValue: '', description: 'Build version image tag, e.g. 1.3-8', name: 'buildVersion')])
                     }
                     echo "Releasing build ${userInput} as ${env.RELEASE_VERSION}"
-                    openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443', env.REGISTRY_PSW) {
-                        openshift.withProject('lifecycle') {
-                            def istagSelector = openshift.selector("istag", "nodejs-mongo-persistent:${userInput}")
+                    openshift.withCluster("${params.OPENSHIFT_REGISTRY_URI}", env.REGISTRY_PSW) {
+                        openshift.withProject("${REGISTRY_PROJECT}") {
+                            def istagSelector = openshift.selector("istag", "${params.IMAGE_STREAM_NAME}:${userInput}")
                             if (!istagSelector.exists()) {
                                 echo "Imagestream tag ${userInput} does not exist in registry"
                                 currentBuild.result = 'ABORTED'
@@ -36,12 +35,12 @@ pipeline {
                         }
                     }
 
-                    openshift.withCluster('insecure://internal-registry.host.prod.eng.rdu2.redhat.com:8443', env.REGISTRY_PSW) {
-                        openshift.withProject('lifecycle') {
-                            openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${userInput}",
-                                    "${openshift.project()}/${env.IMAGE_STREAM_NAME}:${env.RELEASE_VERSION}")
-                            openshift.tag("${openshift.project()}/${env.IMAGE_STREAM_NAME}:${userInput}",
-                                    "${openshift.project()}/${env.IMAGE_STREAM_NAME}:latest")
+                    openshift.withCluster("${params.OPENSHIFT_REGISTRY_URI}", env.REGISTRY_PSW) {
+                        openshift.withProject("${params.REGISTRY_PROJECT}") {
+                            openshift.tag("${openshift.project()}/${params.IMAGE_STREAM_NAME}:${userInput}",
+                                    "${openshift.project()}/${params.IMAGE_STREAM_NAME}:${env.RELEASE_VERSION}")
+                            openshift.tag("${openshift.project()}/${params.IMAGE_STREAM_NAME}:${userInput}",
+                                    "${openshift.project()}/${params.IMAGE_STREAM_NAME}:latest")
                         }
                     }
                 }
@@ -49,23 +48,23 @@ pipeline {
         }
         stage('Production - OpenShift Template') {
             environment {
-                PRODUCTION = credentials('prod-api')
+                PRODUCTION = credentials("${params.PROD_SECRET_NAME}")
                 RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
                 script {
-                    openshift.withCluster('insecure://open.paas.redhat.com', env.PRODUCTION_PSW) {
-                        openshift.withProject('lifecycle') {
+                    openshift.withCluster("${params.PROD_URI}", env.PRODUCTION_PSW) {
+                        openshift.withProject("${params.PROD_PROJECT}") {
                             // Apply the template object from JSON file
-                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+                            openshift.apply(readFile("${params.APP_TEMPLATE_PATH}"))
 
                             createdObjects = openshift.apply(
-                                    openshift.process("nodejs-mongo-persistent",
+                                    openshift.process("${params.IMAGE_STREAM_NAME}",
                                             "-p",
                                             "TAG=${env.RELEASE_VERSION}",
                                             "IMAGESTREAM_TAG=${env.RELEASE_VERSION}",
-                                            "REGISTRY=docker-registry.engineering.redhat.com",
-                                            "PROJECT=lifecycle"))
+                                            "REGISTRY=${params.REGISTRY_URI}",
+                                            "PROJECT=${params.PROD_PROJECT}"))
 
                             // The production environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()
@@ -76,14 +75,14 @@ pipeline {
         }
         stage('Production - Rollout') {
             environment {
-                PRODUCTION = credentials('prod-api')
+                PRODUCTION = credentials("${params.PROD_SECRET_NAME}")
             }
             steps {
                 script {
-                    openshift.withCluster('insecure://open.paas.redhat.com', env.PRODUCTION_PSW) {
-                        openshift.withProject('lifecycle') {
+                    openshift.withCluster("${params.PROD_URI}", env.PRODUCTION_PSW) {
+                        openshift.withProject("${params.PROD_PROJECT}") {
                             deploymentConfigs = createdObjects.narrow('dc')
-                            nodedc = deploymentConfigs.selector("dc", "nodejs-mongo-persistent")
+                            nodedc = deploymentConfigs.selector("dc", "${params.APP_DC_NAME}")
                             def rolloutManager = nodedc.rollout()
                             rolloutManager.latest()
 
@@ -98,13 +97,13 @@ pipeline {
     }
     post {
         success {
-            mail to: "aweiteka@redhat.com",
-            subject: "NodeJS version ${env.RELEASE_VERSION} released to production",
+            mail to: "${params.NOTIFY_EMAIL_LIST}",
+            subject: "${params.IMAGE_STREAM_NAME} version ${env.RELEASE_VERSION} released to production",
             body: "Visit ${BUILD_URL} for details."
         }
         failure {
-            mail to: "aweiteka@redhat.com",
-            subject: "Failed production release of NodeJS version ${env.RELEASE_VERSION}",
+            mail to: "${params.NOTIFY_EMAIL_LIST}",
+            subject: "Failed production release of ${params.IMAGE_STREAM_NAME} version ${env.RELEASE_VERSION}",
             body: "Visit ${BUILD_URL} for details."
         }
     }
