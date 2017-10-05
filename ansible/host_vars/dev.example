@@ -1,10 +1,6 @@
-clusterhost: https://dev.example.com:8443
+clusterhost: dev.example.com:8443
 token: eyJhbGciOiJSUzI1...qKqF-hefeU06alfBaQ
-oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server={{ clusterhost }}
-
-registry_api_secret_name: registry-api
-stage_api_secret_name: stage-api
-prod_api_secret_name: prod-api
+oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server=https://{{ clusterhost }}
 
 admin_users:
   - user1

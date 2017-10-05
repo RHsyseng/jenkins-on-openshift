@@ -17,7 +17,34 @@ objects:
     strategy:
       type: "JenkinsPipeline"
       jenkinsPipelineStrategy:
-          jenkinsfilePath: Jenkinsfile.release
+        jenkinsfilePath: Jenkinsfile.release
+        env:
+          - name: SOURCE_REPOSITORY_URL
+            value: "${SOURCE_REPOSITORY_URL}"
+          - name: SOURCE_REPOSITORY_REF
+            value: "${SOURCE_REPOSITORY_REF}"
+          - name: APP_DC_NAME
+            value: "${APP_DC_NAME}"
+          - name: IMAGE_STREAM_NAME
+            value: "${IMAGE_STREAM_NAME}"
+          - name: APP_TEMPLATE_PATH
+            value: "${APP_TEMPLATE_PATH}"
+          - name: PROD_PROJECT
+            value: "${PROD_PROJECT}"
+          - name: REGISTRY_PROJECT
+            value: "${REGISTRY_PROJECT}"
+          - name: REGISTRY_URI
+            value: "${REGISTRY_URI}"
+          - name: OPENSHIFT_REGISTRY_URI
+            value: "${OPENSHIFT_REGISTRY_URI}"
+          - name: PROD_URI
+            value: "${PROD_URI}"
+          - name: PROD_SECRET_NAME
+            value: "${PROD_SECRET_NAME}"
+          - name: REGISTRY_SECRET_NAME
+            value: "${REGISTRY_SECRET_NAME}"
+          - name: NOTIFY_EMAIL_LIST
+            value: "${NOTIFY_EMAIL_LIST}"
     triggers: {}
 parameters:
 - description: The URL of the repository with your application source code.
@@ -30,3 +57,47 @@ parameters:
   displayName: Git Reference
   name: SOURCE_REPOSITORY_REF
   value: master
+- description: Imagestream name being released
+  name: IMAGE_STREAM_NAME
+  required: true
+  value: nodejs-mongo-persistent
+- description: Application deploymentconfig name
+  name: APP_DC_NAME
+  required: true
+  value: nodejs-mongo-persistent
+- description: Application template path
+  name: APP_TEMPLATE_PATH
+  required: true
+  value: "app/openshift/nodejs-mongodb-persistent.json"
+- description: "Registry hostname that images are pushed to"
+  name: REGISTRY_URI
+  required: true
+  value: "registry.example.com:5000"
+- description: "OpenShift Registry hostname"
+  name: OPENSHIFT_REGISTRY_URI
+  required: true
+  value: "insecure://registry.example.com:8443"
+- description: "Production cluster hostname"
+  name: PROD_URI
+  required: true
+  value: "insecure://production.example.com:8443"
+- description: Production project
+  name: PROD_PROJECT
+  required: true
+  value: lifecycle
+- description: Registry project
+  name: REGISTRY_PROJECT
+  required: true
+  value: lifecycle
+- description: Production secret name
+  name: PROD_SECRET_NAME
+  required: true
+  value: "prod-api"
+- description: Registry secret name
+  name: REGISTRY_SECRET_NAME
+  required: true
+  value: "registry-api"
+- description: Comma-separated email notification list
+  name: NOTIFY_EMAIL_LIST
+  required: true
+  value: "noreply@example.com"

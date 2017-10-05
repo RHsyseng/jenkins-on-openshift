@@ -4,7 +4,15 @@ project_editor_role: edit
 project_viewer_role: view
 project_registry_viewer_role: registry-viewer
 central_registry_hostname: docker-registry.engineering.redhat.com
-production_registry_hostname: registry.starter-ca-central-1.openshift.com
 jenkins_serviceaccount_name: jenkins
 jenkins_volume_size: 2Gi
 state: present
+source_repo_url: https://github.com/RHsyseng/jenkins-on-openshift.git
+source_repo_branch: master
+imagestream_name: nodejs-mongo-persistent
+app_dc_name: nodejs-mongo-persistent
+app_template_path: app/openshift/nodejs-mongodb-persistent.json
+registry_api_secret_name: registry-api
+stage_api_secret_name: stage-api
+prod_api_secret_name: prod-api
+notify_email_list: aweiteka@redhat.com
