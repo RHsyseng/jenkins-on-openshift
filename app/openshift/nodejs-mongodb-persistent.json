@@ -492,7 +492,7 @@
       "displayName": "Git Repository URL",
       "description": "The URL of the repository with your application source code.",
       "required": true,
-      "value": "https://github.com/openshift/nodejs-ex.git"
+      "value": "https://github.com/RHsyseng/jenkins-on-openshift.git"
     },
     {
       "name": "SOURCE_REPOSITORY_REF",
@@ -503,6 +503,7 @@
       "name": "CONTEXT_DIR",
       "displayName": "Context Directory",
       "description": "Set this to the relative path to your project if it is not in the root of your repository."
+      "value": "app"
     },
     {
       "name": "APPLICATION_DOMAIN",

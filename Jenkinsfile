@@ -38,8 +38,8 @@ pipeline {
                 label 'nodejs'
             }
             steps {
-                git url: 'https://github.com/openshift/nodejs-ex'
-                //dir('app')
+                git url: 'https://github.com/RHsyseng/jenkins-on-openshift.git'
+                dir('app')
 
                 sh 'npm install'
                 sh 'npm test'
