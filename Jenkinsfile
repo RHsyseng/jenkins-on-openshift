@@ -2,7 +2,7 @@
 
 pipeline {
     agent any
-
+/*
     parameters {
         string(name: 'IMAGE_STREAM_TAG', defaultValue: 'latest')
         string(name: 'REGISTRY_URI', defaultValue: 'docker-registry.engineering.redhat.com')
@@ -12,6 +12,7 @@ pipeline {
         string(name: 'DEV_URI', defaultValue: 'insecure://osemaster.sbu.lab.eng.bos.redhat.com:8443')
         string(name: 'STAGE_SECRET', defaultValue: 'stage-api' )
     }
+*/
     stages {
         stage('Checkout') {
             steps {
