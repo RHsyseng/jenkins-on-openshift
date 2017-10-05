@@ -8,10 +8,13 @@ These are a set of reference playbooks to configure an application project names
         ./project_bootstrap.sh oc login STAGEURL:PORT --token SESSION_TOKEN
         ./project_bootstrap.sh oc login PRODURL:PORT --token SESSION_TOKEN
         ./project_bootstrap.sh oc login REGISTRYURL:PORT --token SESSION_TOKEN
+
 1. The registry ansible token does not need as much privilege. Let's tweak that:
 
-        oc policy add-role-to-user registry-admin system:serviceaccounts:lifecycle:ansible
-        oc policy remove-role-from-user admin system:serviceaccounts:lifecycle:ansible
+        export PROJECT=lifecycle  # the name of the project in the registry host
+        oc policy remove-role-from-user admin -n $PROJECT -z ansible
+        oc policy add-role-to-user registry-admin -n $PROJECT -z ansible
+
 1. Using the 'host_vars/[environment].example' files, rename each file to remove '.example', add values from step 1 and edit as necessary for your team.
 
         ansible/
