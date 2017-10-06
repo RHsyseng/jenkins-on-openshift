@@ -1,4 +1,3 @@
-project_name: lifecycle
 project_admin_role: admin
 project_editor_role: edit
 project_viewer_role: view
@@ -16,3 +15,4 @@ registry_api_secret_name: registry-api
 stage_api_secret_name: stage-api
 prod_api_secret_name: prod-api
 notify_email_list: aweiteka@redhat.com
+oc: oc --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}

@@ -1,13 +1,13 @@
 ---
 - name: Check if push central registry secret exists
-  command: "{{ oc }} get secret push-external-registry -n {{ project_name }}"
+  command: "{{ oc }} get secret push-external-registry"
   register: central_registry_secret
   ignore_errors: true
 - name: Docker push central registry secret
-  command: "{{ oc }} secrets new-dockercfg push-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }} -n {{ project_name }}"
+  command: "{{ oc }} secrets new-dockercfg push-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }}"
   when: central_registry_secret|failed
 - name: Link docker push central registry secret
-  command: "{{ oc }} secrets link builder push-external-registry -n {{ project_name }}"
+  command: "{{ oc }} secrets link builder push-external-registry"
   when: central_registry_secret|failed
 - name: Check if push prod registry secret exists
   command: "{{ oc }} get secret push-prod-registry -n {{ project_name }}"
