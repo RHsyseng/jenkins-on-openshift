@@ -1,41 +1,41 @@
 - name: Check if {{ registry_api_secret_name }} exists
-  command: "{{ oc }} get secret {{ registry_api_secret_name }} -n {{ project_name }}"
+  command: "{{ oc }} get secret {{ registry_api_secret_name }}"
   when: registry_api_secret_name is defined
   register: registry_api_secret_exists
   ignore_errors: true
 - name: Check if {{ stage_api_secret_name }} exists
-  command: "{{ oc }} get secret {{ stage_api_secret_name }} -n {{ project_name }}"
+  command: "{{ oc }} get secret {{ stage_api_secret_name }}"
   when: stage_api_secret_name is defined
   register: stage_api_secret_exists
   ignore_errors: true
 - name: Check if {{ prod_api_secret_name }} exists
-  command: "{{ oc }} get secret {{ prod_api_secret_name }} -n {{ project_name }}"
+  command: "{{ oc }} get secret {{ prod_api_secret_name }}"
   when: prod_api_secret_name is defined
   register: prod_api_secret_exists
   ignore_errors: true
 - name: Create secret {{ registry_api_secret_name }}
-  command: "{{ oc }} secret new-basicauth {{ registry_api_secret_name }} --password {{ hostvars['registry']['jenkinstoken'] }} -n {{ project_name }}"
+  command: "{{ oc }} secret new-basicauth {{ registry_api_secret_name }} --password {{ hostvars['registry']['jenkinstoken'] }}"
   when:
     - registry_api_secret_exists|failed
     - hostvars['registry']['jenkinstoken'] is defined
 - name: Create secret {{ stage_api_secret_name }}
-  command: "{{ oc }} secret new-basicauth {{ stage_api_secret_name }} --password {{ hostvars['stage']['jenkinstoken'] }} -n {{ project_name }}"
+  command: "{{ oc }} secret new-basicauth {{ stage_api_secret_name }} --password {{ hostvars['stage']['jenkinstoken'] }}"
   when:
     - stage_api_secret_exists|failed
     - hostvars['stage']['jenkinstoken'] is defined
 - name: Create secret {{ prod_api_secret_name }}
-  command: "{{ oc }} secret new-basicauth {{ prod_api_secret_name }} --password {{ hostvars['prod']['jenkinstoken'] }} -n {{ project_name }}"
+  command: "{{ oc }} secret new-basicauth {{ prod_api_secret_name }} --password {{ hostvars['prod']['jenkinstoken'] }}"
   when:
     - prod_api_secret_exists|failed
     - hostvars['prod']['jenkinstoken'] is defined
 - name: Create custom Jenkins source-to-image build
-  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml | {{ oc }} apply --force=true -f -"
 - name: Create Jenkins app
-  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-master.yaml --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param MEMORY_LIMIT=2Gi --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest -n {{ project_name }} | {{ oc }} apply -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-master.yaml --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param MEMORY_LIMIT=2Gi --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest | {{ oc }} apply -f -"
 - name: Create application pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml | {{ oc }} apply --force=true -f -"
 - name: Create release pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/release-pipeline.yaml -n {{ project_name }}
+  shell: "{{ oc }} process -f {{ role_path }}/files/release-pipeline.yaml
     -p SOURCE_REPOSITORY_URL={{ source_repo_url }}
     -p SOURCE_REPOSITORY_REF={{ source_repo_branch }}
     -p IMAGE_STREAM_NAME={{ imagestream_name }}
@@ -49,11 +49,11 @@
     -p REGISTRY_SECRET_NAME={{ registry_api_secret_name }}
     -p NOTIFY_EMAIL_LIST={{ notify_email_list }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
 - name: Create Jenkins master pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml | {{ oc }} apply --force=true -f -"
 - name: Create application base image pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml --param BASE_IMAGE_TAG='nodejs:6' --param APP_BC='nodejs-mongo-persistent' --param APP_NAME='nodejs-mongo-persistent' --param EMAIL_LIST='aweiteka@redhat.com jcallen@redhat.com' --param=APP_PIPELINE='lifecycle-app-lifecycle' -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml --param BASE_IMAGE_TAG='nodejs:6' --param APP_BC='nodejs-mongo-persistent' --param APP_NAME='nodejs-mongo-persistent' --param EMAIL_LIST='aweiteka@redhat.com jcallen@redhat.com' --param=APP_PIPELINE='lifecycle-app-lifecycle' | {{ oc }} apply --force=true -f -"
 - name: Create Jenkins base image pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml -n {{ project_name }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+  shell: "{{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml | {{ oc }} apply --force=true -f -"
 - name: Get last jenkins-custom build number
   command: "{{ oc }} get bc jenkins-custom --template '{{ '{{' }} .status.lastVersion {{ '}}' }}'"
   register: jenkins_custom_build_number

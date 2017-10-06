@@ -1,6 +1,6 @@
+project_name: prod
 clusterhost: prod.example.com
 token: eyJhbGciOiJSUzI1...U-qgyCo9XLtEpWUkpG3CEmmg
-oc: oc --token={{ token }} --server=https://{{ clusterhost }}
 
 admin_users:
   - user1@example.com

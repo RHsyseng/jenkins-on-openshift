@@ -1,6 +1,6 @@
+project_name: dev
 clusterhost: dev.example.com:8443
 token: eyJhbGciOiJSUzI1...qKqF-hefeU06alfBaQ
-oc: oc --insecure-skip-tls-verify=true --token={{ token }} --server=https://{{ clusterhost }}
 
 admin_users:
   - user1
