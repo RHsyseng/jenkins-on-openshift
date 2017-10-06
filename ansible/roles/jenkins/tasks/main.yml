@@ -33,25 +33,28 @@
 - name: Create Jenkins app
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-master.yaml --param NAMESPACE={{ project_name }} --param VOLUME_CAPACITY={{ jenkins_volume_size }} --param MEMORY_LIMIT=2Gi --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest | {{ oc }} apply -f -"
 - name: Create application pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml
+  shell: >-
+    {{ oc }} process -f {{ role_path }}/files/app-pipeline.yaml
     -p SOURCE_REPOSITORY_URL={{ source_repo_url }}
     -p SOURCE_REPOSITORY_REF={{ source_repo_branch }}
     -p IMAGE_STREAM_NAME={{ imagestream_name }}
     -p IMAGE_STREAM_LATEST_TAG={{ imagestream_latest_tag }}
-    -p APP_DC_NAME={{ app_dc_name }}
+    -p APP_DC_NAME={{ app_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
     -p DEV_URI=insecure://{{ hostvars['dev']['clusterhost'] }}
     -p STAGE_URI=insecure://{{ hostvars['stage']['clusterhost'] }}
     -p DEV_PROJECT={{ hostvars['dev']['project_name'] }}
     -p STAGE_PROJECT={{ hostvars['stage']['project_name'] }}
-    -p STAGE_SECRET_NAME={{ stage_api_secret_name }} | {{ oc }} apply --force=true -f -"
+    -p STAGE_SECRET_NAME={{ stage_api_secret_name }}
+    | {{ oc }} apply --force=true -f -
 - name: Create release pipeline
-  shell: "{{ oc }} process -f {{ role_path }}/files/release-pipeline.yaml
+  shell: >-
+    {{ oc }} process -f {{ role_path }}/files/release-pipeline.yaml
     -p SOURCE_REPOSITORY_URL={{ source_repo_url }}
     -p SOURCE_REPOSITORY_REF={{ source_repo_branch }}
     -p IMAGE_STREAM_NAME={{ imagestream_name }}
-    -p APP_DC_NAME={{ app_dc_name }}
+    -p APP_DC_NAME={{ app_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
     -p PROD_URI=insecure://{{ clusterhost }}
@@ -59,7 +62,8 @@
     -p REGISTRY_PROJECT={{ hostvars['registry']['project_name'] }}
     -p PROD_SECRET_NAME={{ prod_api_secret_name }}
     -p REGISTRY_SECRET_NAME={{ registry_api_secret_name }}
-    -p NOTIFY_EMAIL_LIST={{ notify_email_list }} | {{ oc }} apply --force=true -f - -n {{ project_name }}"
+    -p NOTIFY_EMAIL_LIST={{ notify_email_list }}
+    | {{ oc }} apply --force=true -f - -n {{ project_name }}
 - name: Create Jenkins master pipeline
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml | {{ oc }} apply --force=true -f -"
 - name: Create Jenkins base image pipeline
@@ -72,10 +76,10 @@
   # Using the same template but changing some parmeters to match the app
   shell: >-
     {{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml
-    --param BASE_IMAGE_TAG='nodejs:6'
-    --param APP_BC='nodejs-mongo-persistent'
-    --param APP_NAME='nodejs-mongo-persistent'
-    --param APP_PIPELINE='lifecycle-app-lifecycle'
+    --param APP_BC={{ app_name }}
+    --param APP_NAME={{ app_name }}
+    --param BASE_IMAGE_TAG={{ app_base_tag }}
+    --param APP_PIPELINE={{ project_name}}-{{ app_name }}
     --param APP_NAMESPACE={{ project_name }}
     | {{ oc }} apply --force=true -f -
 - name: Get last jenkins-custom build number
