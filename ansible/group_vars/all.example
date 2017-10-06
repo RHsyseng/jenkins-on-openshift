@@ -1,3 +1,19 @@
+---
+# ----------------------
+# Application parameters
+# ----------------------
+source_repo_url: https://github.com/RHsyseng/jenkins-on-openshift.git
+source_repo_branch: master
+# The application name is used to name build and deployment configurations
+app_name: nodejs-mongo-persistent
+app_template_path: app/openshift/nodejs-mongodb-persistent.json
+app_base_tag: nodejs:6
+imagestream_name: nodejs-mongo-persistent
+imagestream_latest_tag: latest
+
+# ----------------------
+# Environment parameters
+# ----------------------
 project_admin_role: admin
 project_editor_role: edit
 project_viewer_role: view
@@ -5,15 +21,17 @@ project_registry_viewer_role: registry-viewer
 central_registry_hostname: registry.example.com
 jenkins_serviceaccount_name: jenkins
 jenkins_volume_size: 2Gi
-state: present
-source_repo_url: https://github.com/RHsyseng/jenkins-on-openshift.git
-source_repo_branch: master
-imagestream_name: nodejs-mongo-persistent
-imagestream_latest_tag: latest
-app_dc_name: nodejs-mongo-persistent
-app_template_path: app/openshift/nodejs-mongodb-persistent.json
 registry_api_secret_name: registry-api
 stage_api_secret_name: stage-api
 prod_api_secret_name: prod-api
+
+# --------------
+# Job parameters
+# --------------
 notify_email_list: aweiteka@redhat.com
+
+# --------------------------------
+# OpenShift client command options
+# --------------------------------
+# the token/clusterhost/project_name are set in host_vars for each environment
 oc: oc --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}
