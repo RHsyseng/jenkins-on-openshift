@@ -115,7 +115,7 @@ pipeline {
         }
         stage('Stage - OpenShift Template') {
             environment {
-                STAGE = credentials('${params.STAGE_SECRET_NAME}')
+                STAGE = credentials("${params.STAGE_SECRET_NAME}")
             }
             steps {
                 script {
@@ -141,7 +141,7 @@ pipeline {
         }
         stage('Stage - Rollout') {
             environment {
-                STAGE = credentials('${params.STAGE_SECRET_NAME}')
+                STAGE = credentials("${params.STAGE_SECRET_NAME}")
             }
             steps {
                 script {
