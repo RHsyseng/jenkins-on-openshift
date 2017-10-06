@@ -5,23 +5,28 @@ pipeline {
 /*
     parameters {
         string(name: 'IMAGE_STREAM_TAG', defaultValue: 'latest')
+        string(name: 'IMAGE_STREAM_NAME', defaultValue: 'nodejs-mongo-persistent')
         string(name: 'REGISTRY_URI', defaultValue: 'docker-registry.engineering.redhat.com')
         string(name: 'DEV_PROJECT', defaultValue: 'lifecycle')
         string(name: 'STAGE_PROJECT', defaultValue: 'lifecycle' )
         string(name: 'STAGE_URI', defaultValue: 'insecure://openshift-ait.e2e.bos.redhat.com:8443')
         string(name: 'DEV_URI', defaultValue: 'insecure://osemaster.sbu.lab.eng.bos.redhat.com:8443')
         string(name: 'STAGE_SECRET', defaultValue: 'stage-api' )
+        string(name: 'APP_TEMPLATE_PATH', defaultValue: 'app/openshift/nodejs-mongodb-persistent.json' )
+        string(name: 'APP_DC_NAME', defaultValue: 'nodejs-mongo-persistent')
     }
 */
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM',
-                    branches: scm.branches,
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [[$class: 'PathRestriction', includedRegions: '^app/.*']],
-                    submoduleCfg: [],
-                    userRemoteConfigs: scm.userRemoteConfigs])
+                script {
+                    checkout([$class                           : 'GitSCM',
+                              branches                         : scm.branches,
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions                       : [[$class: 'PathRestriction', includedRegions: '^app/.*']],
+                              submoduleCfg                     : [],
+                              userRemoteConfigs                : scm.userRemoteConfigs])
+                }
             }
         }
         stage('Create Credentials') {
@@ -38,11 +43,11 @@ pipeline {
                 label 'nodejs'
             }
             steps {
-                git url: 'https://github.com/RHsyseng/jenkins-on-openshift.git'
-                dir('app')
-
-                sh 'npm install'
-                sh 'npm test'
+                //git url: 'https://github.com/RHsyseng/jenkins-on-openshift.git'
+                dir('app') {
+                    sh 'npm install'
+                    sh 'npm test'
+                }
             }
         }
         stage('Dev - OpenShift Template') {
@@ -55,11 +60,11 @@ pipeline {
                         openshift.withProject(params.DEV_PROJECT) {
 
                             // Apply the template object from JSON file
-                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+                            openshift.apply(readFile(params.APP_TEMPLATE_PATH))
 
 
                             createdObjects = openshift.apply(
-                                    openshift.process("nodejs-mongo-persistent",
+                                    openshift.process(params.IMAGE_STREAM_NAME,
                                             "-p",
                                             "TAG=${env.TAG}",
                                             "IMAGESTREAM_TAG=${params.IMAGE_STREAM_TAG}",
@@ -97,8 +102,7 @@ pipeline {
                                 }
                             }
 
-
-                            env.IMAGE_STREAM_NAME = createdObjects.narrow('is').object().metadata.name
+                            //env.IMAGE_STREAM_NAME = createdObjects.narrow('is').object().metadata.name
                             env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
 
                             echo "${env.DEV_ROUTE}"
@@ -112,17 +116,11 @@ pipeline {
                 script {
                     openshift.withCluster(params.DEV_URI) {
                         openshift.withProject(params.DEV_PROJECT) {
-                            deploymentConfigs = createdObjects.narrow('dc')
-                            deploymentConfigs.withEach {
-                                if (!it.name().startsWith("mongo")) {
-                                    it.rollout().latest()
-                                }
-                            }
 
+                            deploymentConfig = openshift.selector("dc", params.APP_DC_NAME)
+                            deploymentConfig.rollout().latest()
                             timeout(10) {
-                                deploymentConfigs.withEach {
-                                    it.rollout().status("-w")
-                                }
+                                deploymentConfig.rollout().status("-w")
                             }
                         }
                     }
@@ -138,7 +136,7 @@ pipeline {
                     openshift.withCluster(params.STAGE_URI, env.STAGE_PSW) {
                         openshift.withProject(params.STAGE_PROJECT) {
                             // Apply the template object from JSON file
-                            openshift.apply(readFile('app/openshift/nodejs-mongodb-persistent.json'))
+                            openshift.apply(readFile(params.APP_TEMPLATE_PATH))
 
                             createdObjects = openshift.apply(
                                     openshift.process("nodejs-mongo-persistent",
@@ -163,17 +161,10 @@ pipeline {
                 script {
                     openshift.withCluster(params.STAGE_URI, env.STAGE_PSW) {
                         openshift.withProject(params.STAGE_PROJECT) {
-                            deploymentConfigs = createdObjects.narrow('dc')
-                            deploymentConfigs.withEach {
-                                if (!it.name().startsWith("mongo")) {
-                                    it.rollout().latest()
-                                }
-                            }
-
+                            deploymentConfig = openshift.selector("dc", params.APP_DC_NAME)
+                            deploymentConfig.rollout().latest()
                             timeout(10) {
-                                deploymentConfigs.withEach {
-                                    it.rollout().status("-w")
-                                }
+                                deploymentConfig.rollout().status("-w")
                             }
                         }
                     }
