@@ -9,6 +9,7 @@ state: present
 source_repo_url: https://github.com/RHsyseng/jenkins-on-openshift.git
 source_repo_branch: master
 imagestream_name: nodejs-mongo-persistent
+imagestream_latest_tag: latest
 app_dc_name: nodejs-mongo-persistent
 app_template_path: app/openshift/nodejs-mongodb-persistent.json
 registry_api_secret_name: registry-api

@@ -2,20 +2,6 @@
 
 pipeline {
     agent any
-/*
-    parameters {
-        string(name: 'IMAGE_STREAM_TAG', defaultValue: 'latest')
-        string(name: 'IMAGE_STREAM_NAME', defaultValue: 'nodejs-mongo-persistent')
-        string(name: 'REGISTRY_URI', defaultValue: 'docker-registry.engineering.redhat.com')
-        string(name: 'DEV_PROJECT', defaultValue: 'lifecycle')
-        string(name: 'STAGE_PROJECT', defaultValue: 'lifecycle' )
-        string(name: 'STAGE_URI', defaultValue: 'insecure://openshift-ait.e2e.bos.redhat.com:8443')
-        string(name: 'DEV_URI', defaultValue: 'insecure://osemaster.sbu.lab.eng.bos.redhat.com:8443')
-        string(name: 'STAGE_SECRET', defaultValue: 'stage-api' )
-        string(name: 'APP_TEMPLATE_PATH', defaultValue: 'app/openshift/nodejs-mongodb-persistent.json' )
-        string(name: 'APP_DC_NAME', defaultValue: 'nodejs-mongo-persistent')
-    }
-*/
     stages {
         stage('Checkout') {
             steps {
@@ -35,7 +21,7 @@ pipeline {
                 // Create a Jenkins Credential from OpenShift Secret
                 // In this case the OpenShift service tokens for the
                 // other environments.
-                syncOpenShiftSecret params.STAGE_SECRET
+                syncOpenShiftSecret params.STAGE_SECRET_NAME
             }
         }
         stage('Dev - MochaJS Test') {
@@ -67,7 +53,7 @@ pipeline {
                                     openshift.process(params.IMAGE_STREAM_NAME,
                                             "-p",
                                             "TAG=${env.TAG}",
-                                            "IMAGESTREAM_TAG=${params.IMAGE_STREAM_TAG}",
+                                            "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
                                             "REGISTRY=${params.REGISTRY_URI}",
                                             "PROJECT=${params.DEV_PROJECT}"))
 
@@ -129,7 +115,7 @@ pipeline {
         }
         stage('Stage - OpenShift Template') {
             environment {
-                STAGE = credentials('${params.STAGE_SECRET}')
+                STAGE = credentials('${params.STAGE_SECRET_NAME}')
             }
             steps {
                 script {
@@ -142,7 +128,7 @@ pipeline {
                                     openshift.process("nodejs-mongo-persistent",
                                             "-p",
                                             "TAG=${env.TAG}",
-                                            "IMAGESTREAM_TAG=${params.IMAGE_STREAM_TAG}",
+                                            "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
                                             "REGISTRY=${params.REGISTRY_URI}",
                                             "PROJECT=${params.STAGE_PROJECT}"))
 
@@ -155,7 +141,7 @@ pipeline {
         }
         stage('Stage - Rollout') {
             environment {
-                STAGE = credentials('${params.STAGE_SECRET}')
+                STAGE = credentials('${params.STAGE_SECRET_NAME}')
             }
             steps {
                 script {
