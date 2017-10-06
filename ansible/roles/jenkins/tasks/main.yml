@@ -54,7 +54,8 @@
     -p APP_DC_NAME={{ app_dc_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
-    -p PROD_URI=insecure://{{ clusterhost }}
+    -p OPENSHIFT_REGISTRY_URI=insecure://{{ hostvars['registry']['clusterhost'] }}
+    -p PROD_URI=insecure://{{ hostvars['prod']['clusterhost'] }}
     -p PROD_PROJECT={{ hostvars['prod']['project_name'] }}
     -p REGISTRY_PROJECT={{ hostvars['registry']['project_name'] }}
     -p PROD_SECRET_NAME={{ prod_api_secret_name }}
