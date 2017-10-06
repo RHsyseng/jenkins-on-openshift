@@ -82,6 +82,7 @@ objects:
                         script {
                             if (rebuild == 'true') {
                                 mail to: "${EMAIL_LIST}",
+                                from: 'jenkins@example.com', replyTo: 'noreply@example.com',
                                 subject: "New ${appName} base image ${baseIsTag} available for approval",
                                 body: "A new ${appName} base image is available. Visit ${JOB_DISPLAY_URL} to re-run this job ('Build Now') and approve a new build.\n\nCurrent base image: ${currentBaseImg}\nLatest base image: ${latestBaseImg}"
                             }

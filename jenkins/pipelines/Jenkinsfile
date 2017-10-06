@@ -1,10 +1,11 @@
 // Manage Jenkins master service
 pipeline {
     agent any
+    /*
     triggers {
-        // OpenShift will also trigger the pipeline if the upstream 'jenkins' image changes
-        pollSCM('H/5 * * * *')
+        pollSCM('H/15 * * * *')
     }
+    */
     stages {
         stage('Checkout') {
             steps {
@@ -29,6 +30,7 @@ pipeline {
     post {
         failure {
             mail to: 'aweiteka@redhat.com',
+            from: 'jenkins@example.com', replyTo: 'noreply@example.com',
             subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
             body: "Jenkins master build failed: ${env.BUILD_URL}"
         }
