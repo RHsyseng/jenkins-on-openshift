@@ -18,6 +18,7 @@ project_admin_role: admin
 project_editor_role: edit
 project_viewer_role: view
 project_registry_viewer_role: registry-viewer
+# You can add a port if needed, e.g. registry.example.com:5000
 central_registry_hostname: registry.example.com
 jenkins_serviceaccount_name: jenkins
 jenkins_volume_size: 2Gi
