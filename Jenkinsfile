@@ -50,13 +50,14 @@ pipeline {
 
 
                             createdObjects = openshift.apply(
-                                    openshift.process(params.IMAGE_STREAM_NAME,
-                                            "-p",
-                                            "TAG=${env.TAG}",
-                                            "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
-                                            "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
-                                            "REGISTRY=${params.REGISTRY_URI}",
-                                            ))
+                                openshift.process(params.IMAGE_STREAM_NAME,
+                                    "-l app=${params.APP_DC_NAME}"
+                                    "-p",
+                                    "TAG=${env.TAG}",
+                                    "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
+                                    "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
+                                    "REGISTRY=${params.REGISTRY_URI}",
+                                ))
 
 
                         }
@@ -172,13 +173,14 @@ pipeline {
                             openshift.apply(readFile(params.APP_TEMPLATE_PATH))
 
                             createdObjects = openshift.apply(
-                                    openshift.process("nodejs-mongo-persistent",
-                                            "-p",
-                                            "TAG=${env.TAG}",
-                                            "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
-                                            "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
-                                            "REGISTRY=${params.REGISTRY_URI}",
-                                            ))
+                                openshift.process("nodejs-mongo-persistent",
+                                    "-l app=${params.APP_DC_NAME}"
+                                    "-p",
+                                    "TAG=${env.TAG}",
+                                    "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
+                                    "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
+                                    "REGISTRY=${params.REGISTRY_URI}",
+                                ))
 
                             // The stage environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()

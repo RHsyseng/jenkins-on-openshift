@@ -59,12 +59,13 @@ pipeline {
                             openshift.apply(readFile("${params.APP_TEMPLATE_PATH}"))
 
                             createdObjects = openshift.apply(
-                                    openshift.process("${params.IMAGE_STREAM_NAME}",
-                                            "-p",
-                                            "TAG=${env.RELEASE_VERSION}",
-                                            "IMAGESTREAM_TAG=${env.RELEASE_VERSION}",
-                                            "REGISTRY=${params.REGISTRY_URI}",
-                                            "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}"))
+                                openshift.process("${params.IMAGE_STREAM_NAME}",
+                                    "-l app=${params.IMAGE_STREAM_NAME}"
+                                    "-p",
+                                    "TAG=${env.RELEASE_VERSION}",
+                                    "IMAGESTREAM_TAG=${env.RELEASE_VERSION}",
+                                    "REGISTRY=${params.REGISTRY_URI}",
+                                    "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}"))
 
                             // The production environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()
