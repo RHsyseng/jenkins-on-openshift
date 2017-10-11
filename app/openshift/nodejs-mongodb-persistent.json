@@ -86,7 +86,7 @@
             {
                 "from": {
                     "kind": "DockerImage",
-                    "name": "${REGISTRY}/${PROJECT}/${NAME}:${TAG}"
+                    "name": "${REGISTRY}/${REGISTRY_PROJECT}/${NAME}:${TAG}"
                 },
                 "name": "${IMAGESTREAM_TAG}",
                 "importPolicy": {
@@ -136,7 +136,7 @@
         "output": {
           "to": {
             "kind": "DockerImage",
-            "name": "${REGISTRY}/${PROJECT}/${NAME}:${TAG}"
+            "name": "${REGISTRY}/${REGISTRY_PROJECT}/${NAME}:${TAG}"
           }
         },
         "triggers": [],
@@ -450,12 +450,12 @@
     {
       "name": "REGISTRY",
       "displayName": "Registry",
-      "description": "",
+      "description": "The URL of the registry where the image resides",
       "required": true
     },
     {
-      "name": "PROJECT",
-      "displayName": "Registry project",
+      "name": "REGISTRY_PROJECT",
+      "displayName": "The registry project where the image resides.",
       "description": "",
       "required": true
     },

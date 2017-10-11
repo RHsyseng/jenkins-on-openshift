@@ -15,6 +15,7 @@ pipeline {
                 }
             }
         }
+
         stage('Create Credentials') {
             steps {
 
@@ -29,7 +30,6 @@ pipeline {
                 label 'nodejs'
             }
             steps {
-                //git url: 'https://github.com/RHsyseng/jenkins-on-openshift.git'
                 dir('app') {
                     sh 'npm install'
                     sh 'npm test'
@@ -54,8 +54,9 @@ pipeline {
                                             "-p",
                                             "TAG=${env.TAG}",
                                             "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
+                                            "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
                                             "REGISTRY=${params.REGISTRY_URI}",
-                                            "PROJECT=${params.DEV_PROJECT}"))
+                                            ))
 
 
                         }
@@ -71,6 +72,7 @@ pipeline {
                             buildConfigs = createdObjects.narrow('bc')
 
                             def build = null
+                            def buildErrorLog = "Build Error"
 
                             // there should only be one...
                             buildConfigs.withEach {
@@ -84,11 +86,56 @@ pipeline {
                                 }
                                 build.untilEach {
                                     // Wait until a build object is complete
-                                    return it.object().status.phase == "Complete"
+                                    def phase = it.object().status.phase
+
+                                    if (phase == "Complete") {
+                                        return true
+                                    } else if (phase == "Failed") {
+                                        currentBuild.result = 'FAILURE'
+                                        buildErrorLog = it.logs().actions[0].err
+                                        return true
+                                    } else {
+                                        return false
+                                    }
+                                }
+                            }
+                            if (currentBuild.result == 'FAILURE') {
+                                error(buildErrorLog)
+                                return
+                            }
+
+                            /* Resolves issue with an ImageStream that won't initially
+                             * import a tag
+                             *
+                             * Select the imagestream and check if that tags list contains a
+                             * map with a key 'conditions'.  If conditions exist run `oc import-image`.
+                             * This will perform the initial pull of the the ImageStreamTag.
+                             *
+                             * After the initial run confirm that conditions does not exist and exit the
+                             * loop.
+                             */
+
+                            def importImage = false
+                            def reCheck = false
+                            timeout(10) {
+                                createdObjects.narrow('is').untilEach {
+                                    if (importImage) {
+                                        reCheck = true
+                                    }
+                                    for (item in it.object().status.tags) {
+                                        if (item.containsKey('conditions')) {
+                                            importImage = true
+                                            reCheck = false
+                                            openshift.raw("import-image ${it.name()}")
+                                            sleep(30)
+                                        }
+                                    }
+                                    if (importImage && reCheck)
+                                        return true
+                                    else return false
                                 }
                             }
 
-                            //env.IMAGE_STREAM_NAME = createdObjects.narrow('is').object().metadata.name
                             env.DEV_ROUTE = createdObjects.narrow('route').object().spec.host
 
                             echo "${env.DEV_ROUTE}"
@@ -129,8 +176,9 @@ pipeline {
                                             "-p",
                                             "TAG=${env.TAG}",
                                             "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
+                                            "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
                                             "REGISTRY=${params.REGISTRY_URI}",
-                                            "PROJECT=${params.STAGE_PROJECT}"))
+                                            ))
 
                             // The stage environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()
