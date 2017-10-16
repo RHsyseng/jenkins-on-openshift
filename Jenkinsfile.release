@@ -64,7 +64,7 @@ pipeline {
                                             "TAG=${env.RELEASE_VERSION}",
                                             "IMAGESTREAM_TAG=${env.RELEASE_VERSION}",
                                             "REGISTRY=${params.REGISTRY_URI}",
-                                            "PROJECT=${params.PROD_PROJECT}"))
+                                            "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}"))
 
                             // The production environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()
@@ -99,12 +99,12 @@ pipeline {
         success {
             mail to: "${params.NOTIFY_EMAIL_LIST}",
             subject: "${params.IMAGE_STREAM_NAME} version ${env.RELEASE_VERSION} released to production",
-            body: "Visit ${BUILD_URL} for details."
+            body: "Visit ${env.BUILD_URL} for details."
         }
         failure {
             mail to: "${params.NOTIFY_EMAIL_LIST}",
             subject: "Failed production release of ${params.IMAGE_STREAM_NAME} version ${env.RELEASE_VERSION}",
-            body: "Visit ${BUILD_URL} for details."
+            body: "Visit ${env.BUILD_URL} for details."
         }
     }
 }
