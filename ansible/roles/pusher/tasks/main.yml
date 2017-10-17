@@ -1,11 +1,8 @@
 ---
-- name: Check if push central registry secret exists
-  command: "{{ oc }} get secret push-external-registry"
-  register: central_registry_secret
+- name: Remove push-to registry secret if it exists
+  command: "{{ oc }} get secret {{ registry_push_secret }}"
   ignore_errors: true
-- name: Docker push central registry secret
-  command: "{{ oc }} secrets new-dockercfg push-external-registry --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }}"
-  when: central_registry_secret|failed
-- name: Link docker push central registry secret
-  command: "{{ oc }} secrets link builder push-external-registry"
-  when: central_registry_secret|failed
+- name: Create secret to push to the central registry
+  command: "{{ oc }} secrets new-dockercfg {{ registry_push_secret }} --docker-username=unused --docker-password={{ hostvars['registry']['pushtoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }}"
+- name: Link docker push central registry secret to builder service account
+  command: "{{ oc }} secrets link builder {{ registry_push_secret }}"
