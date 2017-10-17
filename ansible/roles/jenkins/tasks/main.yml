@@ -46,6 +46,7 @@
     -p STAGE_URI=insecure://{{ hostvars['stage']['clusterhost'] }}
     -p DEV_PROJECT={{ hostvars['dev']['project_name'] }}
     -p STAGE_PROJECT={{ hostvars['stage']['project_name'] }}
+    -p REGISTRY_PROJECT={{ hostvars['registry']['project_name'] }}
     -p STAGE_SECRET_NAME={{ stage_api_secret_name }}
     | {{ oc }} apply --force=true -f -
 - name: Create release pipeline
