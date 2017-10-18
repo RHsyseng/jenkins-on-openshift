@@ -3,11 +3,13 @@ kind: Template
 metadata:
   creationTimestamp: null
   name: jenkins-custom
+  app: jenkins-custom
 objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
     name: jenkins-custom
+    app: jenkins-custom
   spec: {}
 - apiVersion: v1
   kind: BuildConfig
@@ -17,6 +19,7 @@ objects:
     creationTimestamp: null
     labels:
       build: jenkins-custom
+      app: jenkins-custom
     name: jenkins-custom
   spec:
     failedBuildsHistoryLimit: 5

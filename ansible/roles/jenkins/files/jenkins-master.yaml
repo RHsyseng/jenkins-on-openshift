@@ -52,6 +52,8 @@ objects:
     annotations:
       template.alpha.openshift.io/wait-for-ready: "true"
     name: ${JENKINS_SERVICE_NAME}
+    labels:
+      app: ${JENKINS_SERVICE_NAME}
   spec:
     replicas: 1
     selector:
@@ -126,6 +128,8 @@ objects:
     annotations:
       serviceaccounts.openshift.io/oauth-redirectreference.jenkins: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"${JENKINS_SERVICE_NAME}"}}'
     name: ${JENKINS_SERVICE_NAME}
+    labels:
+      app: ${JENKINS_SERVICE_NAME}
 - apiVersion: v1
   groupNames: null
   kind: RoleBinding
@@ -140,6 +144,8 @@ objects:
   kind: Service
   metadata:
     name: ${JNLP_SERVICE_NAME}
+    labels:
+      app: ${JENKINS_SERVICE_NAME}
   spec:
     ports:
     - name: agent
@@ -159,6 +165,8 @@ objects:
         "namespace": "", "kind": "Service"}]'
       service.openshift.io/infrastructure: "true"
     name: ${JENKINS_SERVICE_NAME}
+    labels:
+      app: ${JENKINS_SERVICE_NAME}
   spec:
     ports:
     - name: web
