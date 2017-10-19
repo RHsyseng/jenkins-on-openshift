@@ -1,2 +1,3 @@
 ---
 registry_push_secret: "push-external-registry"
+registry_token: "{{ hostvars['registry-1']['pushtoken'] }}"
