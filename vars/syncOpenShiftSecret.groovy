@@ -8,7 +8,7 @@ def call(String secretName) {
         // Grab the secret object and call the createCredentialFromOpenShiftSecret.
         // This will create a credential the same name as the OpenShift secret.
 
-        def secret = openshift.selector( "secret/${secretName}" ).object()
+        def secret = openshift.selector("secret/${secretName}").object()
         new JenkinsUtils().createCredentialFromOpenShiftSecret("${secretName}", secret)
     }
 }
