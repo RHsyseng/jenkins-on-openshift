@@ -51,7 +51,7 @@ pipeline {
 
                             createdObjects = openshift.apply(
                                 openshift.process(params.IMAGE_STREAM_NAME,
-                                    "-l app=${params.APP_DC_NAME}"
+                                    "-l app=${params.APP_DC_NAME}",
                                     "-p",
                                     "TAG=${env.TAG}",
                                     "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
@@ -174,7 +174,7 @@ pipeline {
 
                             createdObjects = openshift.apply(
                                 openshift.process("nodejs-mongo-persistent",
-                                    "-l app=${params.APP_DC_NAME}"
+                                    "-l app=${params.APP_DC_NAME}",
                                     "-p",
                                     "TAG=${env.TAG}",
                                     "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
