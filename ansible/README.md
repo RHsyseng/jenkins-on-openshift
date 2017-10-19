@@ -2,32 +2,36 @@
 
 These are a set of reference playbooks to configure an application project namespace on a set of clusters.
 
-1. Edit file `project_bootstrap.sh` and run on appropriate clusters.
+1. Using the 'group_vars/\*.yml.example' files, rename each file to remove '.example'.  Make sure to minimally edit the following:
+  - **all.yml**: `central_registry_hostname`
+  - **[group].yml**: `clusterhost`
+  - **[group].yml**: `*_users`
 
-        ./project_bootstrap.sh oc login DEVURL:PORT --token SESSION_TOKEN
-        ./project_bootstrap.sh oc login STAGEURL:PORT --token SESSION_TOKEN
-        ./project_bootstrap.sh oc login PRODURL:PORT --token SESSION_TOKEN
-        ./project_bootstrap.sh oc login REGISTRYURL:PORT --token SESSION_TOKEN
-
-1. The registry ansible token does not need as much privilege. Let's tweak that:
-
-        export PROJECT=lifecycle  # the name of the project in the registry host
-        oc policy remove-role-from-user admin -n $PROJECT -z ansible
-        oc policy add-role-to-user registry-admin -n $PROJECT -z ansible
-
-1. Using the 'host_vars/[environment].example' files, rename each file to remove '.example', add values from step 1 and edit as necessary for your team.
-
-        ansible/
-        ├── host_vars
-        │   ├── dev
-        │   ├── prod
-        │   ├── registry
-        │   └── stage
-1. Edit 'group_vars/all' file as necessary for your team.
 
         ansible/
         ├── group_vars
-            └── all
-1. Run the playbook:
+        │   ├── all.yml
+        │   ├── dev.yml
+        │   ├── prod.yml
+        │   ├── registry.yml
+        │   └── stage.yml
 
-        ansible-playbook -i ansible/inventory.yml ansible/main.yml
+2. Using the 'host_vars/[environment]-1.yml.example' files, rename each file to remove '.example'.  
+
+   Depending on your [authentication method](https://docs.openshift.com/container-platform/3.6/install_config/configuring_authentication.html) to OpenShift either use: `openshift_username`/`openshift_password` or [`token`](https://docs.openshift.com/container-platform/3.6/cli_reference/get_started_cli.html#installing-the-cli).  If your configured authentication is external for example GitHub you will need to use a token.
+
+   Since we are dealing with authentication information you may want to utilize [ansible-vault](https://docs.ansible.com/ansible/2.4/vault.html) to encrypt the host_vars.
+
+
+        ansible/
+        ├── host_vars
+        │   ├── dev-1.yml.example
+        │   ├── prod-1.yml.example
+        │   ├── registry-1.yml.example
+        │   └── stage-1.yml.example
+
+3. Run the playbook:
+
+```
+ansible-playbook -i ansible/inventory.yml ansible/main.yml
+```

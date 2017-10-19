@@ -1,4 +1,43 @@
 ---
+
+- name: Project Bootstrap
+  hosts: all
+  tasks:
+    - name: Get User Token
+      uri:
+        url: "https://{{ clusterhost }}/oauth/authorize?response_type=token&client_id=openshift-challenging-client"
+        user: "{{ openshift_username }}"
+        password: "{{ openshift_password }}"
+        validate_certs: "{{ validate_certs }}"
+        force_basic_auth: True
+      register: login
+      when: token is undefined
+
+    - name: user token
+      set_fact:
+        token: "{{ (login.url | regex_search('access_token=([\\d\\w\\-_]*)')).split('=')[1] }}"
+      when: token is undefined
+
+    - name: Create Project
+      command: "{{ oc }} --config=/dev/null new-project {{ project_name }} --display-name='{{ project_display_name }}' --description='{{ project_description }}'"
+      ignore_errors: True
+
+    - name: Create service account
+      command: "{{ oc }} --config=/dev/null create serviceaccount {{ token_name }} -n {{ project_name }}"
+      ignore_errors: True
+
+    - name: Add role to user
+      command: "{{ oc }} --config=/dev/null policy add-role-to-user admin -z {{ token_name }} -n {{ project_name }}"
+      ignore_errors: True
+
+    - name: Get Token
+      command: "{{ oc }} --config=/dev/null sa get-token {{ token_name }} -n {{ project_name }}"
+      register: new_token
+
+    - name: New Token
+      set_fact:
+        token: "{{ new_token.stdout }}"
+
 - name: Configure project authorization
   hosts: all
   roles:

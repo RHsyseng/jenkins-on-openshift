@@ -14,20 +14,20 @@
   register: prod_api_secret_exists
   ignore_errors: true
 - name: Create secret {{ registry_api_secret_name }}
-  command: "{{ oc }} secret new-basicauth {{ registry_api_secret_name }} --password {{ hostvars['registry']['jenkinstoken'] }}"
+  command: "{{ oc }} secret new-basicauth {{ registry_api_secret_name }} --password {{ hostvars['registry-1']['jenkinstoken'] }}"
   when:
     - registry_api_secret_exists|failed
-    - hostvars['registry']['jenkinstoken'] is defined
+    - hostvars['registry-1']['jenkinstoken'] is defined
 - name: Create secret {{ stage_api_secret_name }}
-  command: "{{ oc }} secret new-basicauth {{ stage_api_secret_name }} --password {{ hostvars['stage']['jenkinstoken'] }}"
+  command: "{{ oc }} secret new-basicauth {{ stage_api_secret_name }} --password {{ hostvars['stage-1']['jenkinstoken'] }}"
   when:
     - stage_api_secret_exists|failed
-    - hostvars['stage']['jenkinstoken'] is defined
+    - hostvars['stage-1']['jenkinstoken'] is defined
 - name: Create secret {{ prod_api_secret_name }}
-  command: "{{ oc }} secret new-basicauth {{ prod_api_secret_name }} --password {{ hostvars['prod']['jenkinstoken'] }}"
+  command: "{{ oc }} secret new-basicauth {{ prod_api_secret_name }} --password {{ hostvars['prod-1']['jenkinstoken'] }}"
   when:
     - prod_api_secret_exists|failed
-    - hostvars['prod']['jenkinstoken'] is defined
+    - hostvars['prod-1']['jenkinstoken'] is defined
 - name: Create custom Jenkins source-to-image build
   shell: "{{ oc }} process -f {{ role_path }}/files/jenkins-custom-build.yaml | {{ oc }} apply --force=true -f -"
 - name: Create Jenkins app
@@ -42,11 +42,11 @@
     -p APP_DC_NAME={{ app_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
-    -p DEV_URI=insecure://{{ hostvars['dev']['clusterhost'] }}
-    -p STAGE_URI=insecure://{{ hostvars['stage']['clusterhost'] }}
-    -p DEV_PROJECT={{ hostvars['dev']['project_name'] }}
-    -p STAGE_PROJECT={{ hostvars['stage']['project_name'] }}
-    -p REGISTRY_PROJECT={{ hostvars['registry']['project_name'] }}
+    -p DEV_URI=insecure://{{ hostvars['dev-1']['clusterhost'] }}
+    -p STAGE_URI=insecure://{{ hostvars['stage-1']['clusterhost'] }}
+    -p DEV_PROJECT={{ hostvars['dev-1']['project_name'] }}
+    -p STAGE_PROJECT={{ hostvars['stage-1']['project_name'] }}
+    -p REGISTRY_PROJECT={{ hostvars['registry-1']['project_name'] }}
     -p STAGE_SECRET_NAME={{ stage_api_secret_name }}
     | {{ oc }} apply --force=true -f -
 - name: Create release pipeline
@@ -58,10 +58,10 @@
     -p APP_DC_NAME={{ app_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
-    -p OPENSHIFT_REGISTRY_URI=insecure://{{ hostvars['registry']['clusterhost'] }}
-    -p PROD_URI=insecure://{{ hostvars['prod']['clusterhost'] }}
-    -p PROD_PROJECT={{ hostvars['prod']['project_name'] }}
-    -p REGISTRY_PROJECT={{ hostvars['registry']['project_name'] }}
+    -p OPENSHIFT_REGISTRY_URI=insecure://{{ hostvars['registry-1']['clusterhost'] }}
+    -p PROD_URI=insecure://{{ hostvars['prod-1']['clusterhost'] }}
+    -p PROD_PROJECT={{ hostvars['prod-1']['project_name'] }}
+    -p REGISTRY_PROJECT={{ hostvars['registry-1']['project_name'] }}
     -p PROD_SECRET_NAME={{ prod_api_secret_name }}
     -p REGISTRY_SECRET_NAME={{ registry_api_secret_name }}
     -p NOTIFY_EMAIL_LIST={{ notify_email_list }}
