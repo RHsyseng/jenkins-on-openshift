@@ -8,9 +8,22 @@ admin_users:
 editor_users:
   - user1
   - user2
+  # If the registry is the internal registry in the dev cluster, we need to
+  # grant access to the relevant service accounts from the dev project.
+  # This grants push access from dev builds to the registry:
+  #- system:serviceaccount:dev:builder
 viewer_users:
+viewer_groups:
+  # If the registry is the internal registry in the dev cluster, we need to
+  # grant access to the relevant service accounts from the dev project
+  # This grants pull access from dev/stage/prod to the registry:
+  # note that dev is required for the Jenkins job to monitor the imagestream
+  #- system:serviceaccounts:dev
+  #- system:serviceaccounts:stage
+  #- system:serviceaccounts:prod
 deprecated_admin_users:
 deprecated_editor_users:
 deprecated_viewer_users:
+deprecated_viewer_groups:
 
 jenkins_automation_openshift_role: edit

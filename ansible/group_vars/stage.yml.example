@@ -11,6 +11,8 @@ admin_users:
   - user2
 editor_users:
 viewer_users:
+viewer_groups:
 deprecated_admin_users:
 deprecated_editor_users:
 deprecated_viewer_users:
+deprecated_viewer_groups:
