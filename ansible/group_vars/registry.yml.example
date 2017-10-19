@@ -1,6 +1,8 @@
+---
 project_name: registry
+project_display_name: "Registry - Software lifecycle"
+project_description: "Registry - Software Development Lifecycle (SDLC)"
 clusterhost: registry.example.com:8443
-token: eyJhbGciOiJSUzI1...q6vB3PLizZIMmnA
 
 admin_users:
 editor_users:

@@ -1,6 +1,8 @@
+---
 project_name: dev
+project_display_name: "Development - Software lifecycle"
+project_description: "Development - Software Development Lifecycle (SDLC)"
 clusterhost: dev.example.com:8443
-token: eyJhbGciOiJSUzI1...qKqF-hefeU06alfBaQ
 
 admin_users:
   - user1

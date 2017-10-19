@@ -1,13 +1,17 @@
 all:
-  hosts:
+  children:
     dev:
+      hosts:
+        dev-1
     stage:
+      hosts:
+        stage-1
     prod:
+      hosts:
+        prod-1
     registry:
+      hosts:
+        registry-1
   vars:
     ansible_connection: local
     gather_facts: no
-nonproduction:
-  hosts:
-    dev:
-    stage:

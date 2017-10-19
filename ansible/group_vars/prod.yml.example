@@ -1,6 +1,8 @@
+---
 project_name: prod
+project_display_name: "Production - Software lifecycle"
+project_description: "Production - Software Development Lifecycle (SDLC)"
 clusterhost: prod.example.com
-token: eyJhbGciOiJSUzI1...U-qgyCo9XLtEpWUkpG3CEmmg
 
 admin_users:
   - user1@example.com

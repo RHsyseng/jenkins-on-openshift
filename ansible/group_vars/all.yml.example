@@ -26,13 +26,15 @@ registry_api_secret_name: registry-api
 stage_api_secret_name: stage-api
 prod_api_secret_name: prod-api
 
+token_name: ansible
 # --------------
 # Job parameters
 # --------------
 notify_email_list: aweiteka@redhat.com
 
+validate_certs: True
 # --------------------------------
 # OpenShift client command options
 # --------------------------------
 # the token/clusterhost/project_name are set in host_vars for each environment
-oc: oc --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}
+oc: oc {% if not validate_certs %}--insecure-skip-tls-verify{% endif %} --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}

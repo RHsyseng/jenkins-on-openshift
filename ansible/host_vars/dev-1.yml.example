@@ -1,0 +1,4 @@
+---
+openshift_username: username
+openshift_password: password
+#token:
