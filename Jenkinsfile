@@ -6,6 +6,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
+                    /* NOTE: this does not work */
                     checkout([$class                           : 'GitSCM',
                               branches                         : scm.branches,
                               doGenerateSubmoduleConfigurations: false,
@@ -36,30 +37,51 @@ pipeline {
                 }
             }
         }
+
         stage('Dev - OpenShift Template') {
             steps {
-
                 script {
+                    def openShiftApplyArgs = ""
                     env.VERSION = readFile('app/VERSION').trim()
                     env.TAG = "${env.VERSION}-${env.BUILD_NUMBER}"
                     openshift.withCluster(params.DEV_URI) {
                         openshift.withProject(params.DEV_PROJECT) {
-
-                            // Apply the template object from JSON file
-                            openshift.apply(readFile(params.APP_TEMPLATE_PATH))
-
-
-                            createdObjects = openshift.apply(
-                                openshift.process(params.IMAGE_STREAM_NAME,
+                            if (findFileChanges(params.APP_TEMPLATE_PATH) || !openshift.selector("template/${params.APP_DC_NAME}").exists()) {
+                                // Apply the template object from JSON file
+                                openshift.apply(readFile(params.APP_TEMPLATE_PATH))
+                            } else {
+                                openShiftApplyArgs = "--dry-run"
+                            }
+                            // Process the template and return the Map of the result
+                            def model = openshift.process(params.IMAGE_STREAM_NAME,
                                     "-l app=${params.APP_DC_NAME}",
                                     "-p",
                                     "TAG=${env.TAG}",
                                     "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
                                     "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
-                                    "REGISTRY=${params.REGISTRY_URI}",
-                                ))
+                                    "REGISTRY=${params.REGISTRY_URI}")
 
+                            /* If the project's secret exists it must be removed at least in
+                             * the case of using a database along with an application.
+                             * Issue: Since the template is being process and applied with each
+                             * job run the secret is also being updated since it contains generate
+                             * values from the template.
 
+                             * The section below confirms if the secret exists and if so removes the
+                             * item from the collection.
+                             */
+
+                            if (openshift.selector("secret/${params.APP_DC_NAME}").exists()) {
+                                def count = 0
+                                for (item in model) {
+                                    if (item.kind == 'Secret') {
+                                        model.remove(count)
+                                    }
+                                    count++
+                                }
+                            }
+
+                            createdObjects = openshift.apply(model, openShiftApplyArgs)
                         }
                     }
                 }
@@ -87,7 +109,11 @@ pipeline {
                                 }
                                 build.untilEach {
                                     // Wait until a build object is complete
+                                    echo ">>>>> Enter Build Status Check <<<<<"
                                     def phase = it.object().status.phase
+
+
+                                    echo ">>>>> Exit Build Status Check - Phase: ${phase} <<<<<"
 
                                     if (phase == "Complete") {
                                         return true
@@ -120,6 +146,10 @@ pipeline {
                             def reCheck = false
                             timeout(10) {
                                 createdObjects.narrow('is').untilEach {
+                                    echo ">>>>> Enter ImageStream Check <<<<<"
+                                    echo "${importImage}"
+                                    echo "${reCheck}"
+
                                     if (importImage) {
                                         reCheck = true
                                     }
@@ -131,7 +161,21 @@ pipeline {
                                             sleep(30)
                                         }
                                     }
-                                    if (importImage && reCheck)
+                                    echo ">>>>> Exit ImageStream Check <<<<<"
+                                    echo "${importImage}"
+                                    echo "${reCheck}"
+
+                                    /* NXOR - if importImage and reCheck are both true or false
+                                     * return true, else return false
+                                     *
+                                     * Multiple scenarios (importImage, reCheck):
+                                     * - No import required (false, false)
+                                     * - Imported image but needs to be rechecked (true, false)
+                                     * - This should never happen (false, true)
+                                     * - Imported image and checked (true, true)
+                                     */
+
+                                    if (!(importImage ^ reCheck))
                                         return true
                                     else return false
                                 }
@@ -169,19 +213,43 @@ pipeline {
                 script {
                     openshift.withCluster(params.STAGE_URI, env.STAGE_PSW) {
                         openshift.withProject(params.STAGE_PROJECT) {
-                            // Apply the template object from JSON file
-                            openshift.apply(readFile(params.APP_TEMPLATE_PATH))
+                            def openShiftApplyArgs = ""
+                            if (findFileChanges(params.APP_TEMPLATE_PATH) || !openshift.selector("template/${params.APP_DC_NAME}").exists()) {
+                                // Apply the template object from JSON file
+                                openshift.apply(readFile(params.APP_TEMPLATE_PATH))
+                            } else {
+                                openShiftApplyArgs = "--dry-run"
+                            }
 
-                            createdObjects = openshift.apply(
-                                openshift.process("nodejs-mongo-persistent",
+                            // Process the template and return the Map of the result
+                            def model = openshift.process(params.IMAGE_STREAM_NAME,
                                     "-l app=${params.APP_DC_NAME}",
                                     "-p",
                                     "TAG=${env.TAG}",
                                     "IMAGESTREAM_TAG=${params.IMAGE_STREAM_LATEST_TAG}",
                                     "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
-                                    "REGISTRY=${params.REGISTRY_URI}",
-                                ))
+                                    "REGISTRY=${params.REGISTRY_URI}")
 
+                            /* If the project's secret exists it must be removed at least in
+                             * the case of using a database along with an application.
+                             * Issue: Since the template is being process and applied with each
+                             * job run the secret is also being updated since it contains generate
+                             * values from the template.
+
+                             * The section below confirms if the secret exists and if so removes the
+                             * item from the collection.
+                             */
+
+                            if (openshift.selector("secret/${params.APP_DC_NAME}").exists()) {
+                                def count = 0
+                                for (item in model) {
+                                    if (item.kind == 'Secret') {
+                                        model.remove(count)
+                                    }
+                                    count++
+                                }
+                            }
+                            createdObjects = openshift.apply(model, openShiftApplyArgs)
                             // The stage environment does not need buildconfigs
                             createdObjects.narrow('bc').delete()
                         }

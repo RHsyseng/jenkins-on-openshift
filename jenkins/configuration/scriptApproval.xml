@@ -4,6 +4,7 @@
   <approvedSignatures>
     <string>method hudson.plugins.git.GitSCM getBranches</string>
     <string>method hudson.plugins.git.GitSCM getUserRemoteConfigs</string>
+    <string>method java.util.Collection remove java.lang.Object</string>
   </approvedSignatures>
   <aclApprovedSignatures/>
   <approvedClasspathEntries/>
