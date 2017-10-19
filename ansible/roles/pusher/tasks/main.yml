@@ -1,8 +1,14 @@
 ---
 - name: Remove push-to registry secret if it exists
-  command: "{{ oc }} get secret {{ registry_push_secret }}"
+  command: "{{ oc }} delete secret {{ registry_push_secret }}"
   ignore_errors: true
+
 - name: Create secret to push to the central registry
-  command: "{{ oc }} secrets new-dockercfg {{ registry_push_secret }} --docker-username=unused --docker-password={{ hostvars['registry-1']['pushtoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }}"
+  command: >-
+    {{ oc }} secrets new-dockercfg {{ registry_push_secret }}
+    --docker-password={{ registry_token }}
+    --docker-username=unused --docker-email=unused
+    --docker-server={{ central_registry_hostname }}
+
 - name: Link docker push central registry secret to builder service account
   command: "{{ oc }} secrets link builder {{ registry_push_secret }}"
