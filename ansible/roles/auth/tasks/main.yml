@@ -11,6 +11,10 @@
   command: "{{ oc }} policy add-role-to-user {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ viewer_users }}"
   when: viewer_users
+- name: Add viewer groups
+  command: "{{ oc }} policy add-role-to-group {{ project_registry_viewer_role}} {{ item }}"
+  with_items: "{{ viewer_groups }}"
+  when: viewer_groups
 
 - name: Remove admin users
   command: "{{ oc }} policy remove-role-from-user {{ project_admin_role}} {{ item }}"
@@ -24,6 +28,10 @@
   command: "{{ oc }} policy remove-role-from-user {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ deprecated_viewer_users }}"
   when: deprecated_viewer_users
+- name: Remove viewer groups
+  command: "{{ oc }} policy remove-role-from-group {{ project_registry_viewer_role}} {{ item }}"
+  with_items: "{{ deprecated_viewer_groups }}"
+  when: deprecated_viewer_groups
 
 - name: Check if Jenkins serviceaccount exists
   command: "{{ oc }} get sa {{ jenkins_serviceaccount_name }}"
