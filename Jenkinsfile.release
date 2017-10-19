@@ -99,11 +99,13 @@ pipeline {
     post {
         success {
             mail to: "${params.NOTIFY_EMAIL_LIST}",
+            from: 'jenkins@example.com', replyTo: 'noreply@example.com',
             subject: "${params.IMAGE_STREAM_NAME} version ${env.RELEASE_VERSION} released to production",
             body: "Visit ${env.BUILD_URL} for details."
         }
         failure {
             mail to: "${params.NOTIFY_EMAIL_LIST}",
+            from: 'jenkins@example.com', replyTo: 'noreply@example.com',
             subject: "Failed production release of ${params.IMAGE_STREAM_NAME} version ${env.RELEASE_VERSION}",
             body: "Visit ${env.BUILD_URL} for details."
         }
