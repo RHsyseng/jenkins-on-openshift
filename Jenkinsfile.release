@@ -60,7 +60,7 @@ pipeline {
 
                             createdObjects = openshift.apply(
                                 openshift.process("${params.IMAGE_STREAM_NAME}",
-                                    "-l app=${params.IMAGE_STREAM_NAME}"
+                                    "-l app=${params.IMAGE_STREAM_NAME}",
                                     "-p",
                                     "TAG=${env.RELEASE_VERSION}",
                                     "IMAGESTREAM_TAG=${env.RELEASE_VERSION}",
