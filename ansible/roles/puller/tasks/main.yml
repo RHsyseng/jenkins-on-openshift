@@ -1,11 +1,14 @@
 ---
-- name: Check if pull central registry secret exists
-  command: "{{ oc }} get secret pull-external-registry"
-  register: pull_registry_secret
+- name: Remove pull-from central registry secret if it exists
+  command: "{{ oc }} get secret {{ registry_pull_secret }}"
   ignore_errors: true
-- name: Docker pull registry secret
-  command: "{{ oc }} secrets new-dockercfg pull-external-registry --docker-username=unused --docker-password={{ hostvars['registry-1']['pulltoken'] }} --docker-email=unused --docker-server={{ central_registry_hostname }}"
-  when: pull_registry_secret|failed
-- name: Link docker pull registry secret
-  command: "{{ oc }} secrets link default pull-external-registry --for=pull"
-  when: pull_registry_secret|failed
+
+- name: Create secret to pull from the central registry
+  command: >-
+    {{ oc }} secrets new-dockercfg {{ registry_pull_secret }}
+    --docker-username=unused
+    --docker-password={{ registry_pull_token }}
+    --docker-email=unused --docker-server={{ central_registry_hostname }}
+
+- name: Link docker pull registry secret to the default service account
+  command: "{{ oc }} secrets link default {{ registry_pull_secret }} --for=pull"

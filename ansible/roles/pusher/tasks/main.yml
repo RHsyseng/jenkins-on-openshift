@@ -6,7 +6,7 @@
 - name: Create secret to push to the central registry
   command: >-
     {{ oc }} secrets new-dockercfg {{ registry_push_secret }}
-    --docker-password={{ registry_token }}
+    --docker-password={{ registry_push_token }}
     --docker-username=unused --docker-email=unused
     --docker-server={{ central_registry_hostname }}
 

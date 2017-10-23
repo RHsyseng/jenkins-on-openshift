@@ -1,0 +1,3 @@
+---
+registry_pull_secret: "pull-external-registry"
+registry_pull_token: "{{ hostvars['registry-1']['pulltoken'] }}"
