@@ -3,14 +3,17 @@
   command: "{{ oc }} policy add-role-to-user {{ project_admin_role}} {{ item }}"
   with_items: "{{ admin_users }}"
   when: admin_users
+
 - name: Add editor users
   command: "{{ oc }} policy add-role-to-user {{ project_editor_role}} {{ item }}"
   with_items: "{{ editor_users }}"
   when: editor_users
+
 - name: Add viewer users
   command: "{{ oc }} policy add-role-to-user {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ viewer_users }}"
   when: viewer_users
+
 - name: Add viewer groups
   command: "{{ oc }} policy add-role-to-group {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ viewer_groups }}"
@@ -20,14 +23,17 @@
   command: "{{ oc }} policy remove-role-from-user {{ project_admin_role}} {{ item }}"
   with_items: "{{ deprecated_admin_users }}"
   when: deprecated_admin_users
+
 - name: Remove editor users
   command: "{{ oc }} policy remove-role-from-user {{ project_editor_role}} {{ item }}"
   with_items: "{{ deprecated_editor_users }}"
   when: deprecated_editor_users
+
 - name: Remove viewer users
   command: "{{ oc }} policy remove-role-from-user {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ deprecated_viewer_users }}"
   when: deprecated_viewer_users
+
 - name: Remove viewer groups
   command: "{{ oc }} policy remove-role-from-group {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ deprecated_viewer_groups }}"
@@ -38,20 +44,26 @@
   register: jenkins_sa_exists
   ignore_errors: true
   when: jenkins_automation_openshift_role is defined
+
 - name: Create Jenkins serviceaccount
   command: "{{ oc }} create serviceaccount {{ jenkins_serviceaccount_name }}"
   when:
     - jenkins_sa_exists|failed
     - jenkins_automation_openshift_role is defined
+
 - name: Assign role to Jenkins serviceaccount
-  command: "{{ oc }} policy add-role-to-user {{ jenkins_automation_openshift_role }} system:serviceaccount:{{ project_name }}:{{ jenkins_serviceaccount_name }}"
+  command: >-
+    {{ oc }} policy add-role-to-user {{ jenkins_automation_openshift_role }}
+    system:serviceaccount:{{ project_name }}:{{ jenkins_serviceaccount_name }}
   when:
     - jenkins_sa_exists|failed
     - jenkins_automation_openshift_role is defined
+
 - name: Get Jenkins token value
   command: "{{ oc }} sa get-token {{ jenkins_serviceaccount_name }}"
   register: jenkinstoken
   when: jenkins_automation_openshift_role is defined
+
 - set_fact:
     jenkinstoken: "{{ jenkinstoken.stdout }}"
   when: jenkins_automation_openshift_role is defined
@@ -59,9 +71,11 @@
 - name: Get registry push token value
   command: "{{ oc }} sa get-token builder"
   register: forpush
+
 - name: Get pull token value
   command: "{{ oc }} sa get-token deployer"
   register: forpull
+
 - set_fact:
     pushtoken: "{{ forpush.stdout }}"
     pulltoken: "{{ forpull.stdout }}"
