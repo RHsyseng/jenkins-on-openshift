@@ -30,8 +30,9 @@ token_name: ansible
 # --------------
 # Job parameters
 # --------------
-notify_email_list: aweiteka@redhat.com
-
+notify_email_list: devops@example.com
+notify_email_from: jenkins@example.com
+notify_email_replyto: noreply@example.com
 validate_certs: True
 # --------------------------------
 # OpenShift client command options
