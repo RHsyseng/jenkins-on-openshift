@@ -1,4 +1,9 @@
+# Authentication for the prod cluster
+#
+# Set up either username+password or token (you can obtain a token from an
+# already logged in session with `oc whoami -t`)
 ---
 openshift_username: username
 openshift_password: password
+
 #token:

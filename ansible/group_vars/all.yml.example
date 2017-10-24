@@ -4,37 +4,56 @@
 # ----------------------
 source_repo_url: https://github.com/RHsyseng/jenkins-on-openshift.git
 source_repo_branch: master
-# The application name is used to name build and deployment configurations
-app_name: nodejs-mongo-persistent
+# path (inside the repo) where the application template is
 app_template_path: app/openshift/nodejs-mongodb-persistent.json
+
+# app_name is used to name build and deployment configurations
+app_name: nodejs-mongo-persistent
 app_base_tag: nodejs:6
-imagestream_name: nodejs-mongo-persistent
+# name of the generated ImageStreams
+imagestream_name: "{{ app_name }}"
 imagestream_latest_tag: latest
 
 # ----------------------
 # Environment parameters
 # ----------------------
-project_admin_role: admin
-project_editor_role: edit
-project_viewer_role: view
-project_registry_viewer_role: registry-viewer
+
+# The hostname to the central registry where all images are stored.
 # You can add a port if needed, e.g. registry.example.com:5000
 central_registry_hostname: registry.example.com
+
 jenkins_serviceaccount_name: jenkins
 jenkins_volume_size: 2Gi
 registry_api_secret_name: registry-api
 stage_api_secret_name: stage-api
 prod_api_secret_name: prod-api
 
+# Name of the service account that these playbooks create in each project to
+# control access. This is used both by playbooks themselves and by some of the
+# objects created (e.g. for the Jenkins job in the Dev project to monitor
+# ImageStreams in Stage)
 token_name: ansible
+
+# The names of the OpenShift roles to assign to project roles.
+# These would rarely need to be adjusted.
+project_admin_role: admin
+project_editor_role: edit
+project_viewer_role: view
+project_registry_viewer_role: registry-viewer
+
 # --------------
 # Job parameters
 # --------------
-notify_email_list: aweiteka@redhat.com
-
+notify_email_list: devops@example.com
+notify_email_from: jenkins@example.com
+notify_email_replyto: noreply@example.com
 validate_certs: True
+
 # --------------------------------
 # OpenShift client command options
 # --------------------------------
-# the token/clusterhost/project_name are set in host_vars for each environment
-oc: oc {% if not validate_certs %}--insecure-skip-tls-verify{% endif %} --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}
+# This is how the "oc" client will be invoked.
+# The token/clusterhost/project_name are set in vars for each environment
+oc: >-
+  oc {% if not validate_certs %}--insecure-skip-tls-verify{% endif %}
+  --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}

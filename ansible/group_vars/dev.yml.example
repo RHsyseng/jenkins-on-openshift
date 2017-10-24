@@ -1,15 +1,19 @@
 ---
+# API server's address:port for the "dev cluster"
+clusterhost: dev.example.com:8443
+# Details of the "dev" project to be created
 project_name: dev
 project_display_name: "Development - Software lifecycle"
 project_description: "Development - Software Development Lifecycle (SDLC)"
-clusterhost: dev.example.com:8443
 
 admin_users:
-  - user1
-  - user2
+#  - user1
+#  - user2
 editor_users:
 viewer_users:
 viewer_groups:
+# Use the various deprecated_* vars to *remove* entries from the
+# respective lists.
 deprecated_admin_users:
 deprecated_editor_users:
 deprecated_viewer_users:

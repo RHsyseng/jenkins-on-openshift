@@ -1,16 +1,23 @@
 ---
+# address:port for the central registry's cluster.
+# Note that this is different from central_registry_host (from all.yml):
+# this is the host to reach the internal registry's OpenShift cluster,
+# while central_registry_host is to reach the registry itself (i.e. the
+# host where images are pushed/pulled)
+clusterhost: registry.example.com:8443
+# A project for the registry
 project_name: registry
 project_display_name: "Registry - Software lifecycle"
 project_description: "Registry - Software Development Lifecycle (SDLC)"
-clusterhost: registry.example.com:8443
 
 admin_users:
 editor_users:
-  - user1
-  - user2
-  # If the registry is the internal registry in the dev cluster, we need to
-  # grant access to the relevant service accounts from the dev project.
-  # This grants push access from dev builds to the registry:
+  #- user1
+  #- user2
+  # If the registry is an internal registry shared with the dev cluster,
+  # we need to grant access to the relevant service accounts from the
+  # dev project. Uncomment this to grant push access from dev builds
+  # to the registry:
   #- system:serviceaccount:dev:builder
 viewer_users:
 viewer_groups:
@@ -21,6 +28,8 @@ viewer_groups:
   #- system:serviceaccounts:dev
   #- system:serviceaccounts:stage
   #- system:serviceaccounts:prod
+# Use the various deprecated_* vars to *remove* entries from the
+# respective lists.
 deprecated_admin_users:
 deprecated_editor_users:
 deprecated_viewer_users:

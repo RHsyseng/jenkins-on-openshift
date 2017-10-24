@@ -85,31 +85,39 @@
     -p PROD_SECRET_NAME={{ prod_api_secret_name }}
     -p REGISTRY_SECRET_NAME={{ registry_api_secret_name }}
     -p NOTIFY_EMAIL_LIST={{ notify_email_list }}
+    -p NOTIFY_EMAIL_FROM={{ notify_email_from }}
+    -p NOTIFY_EMAIL_REPLYTO={{ notify_email_replyto }}
     | {{ oc }} apply --force=true -f - -n {{ project_name }}
 
 - name: Create Jenkins master pipeline
   shell: >-
     {{ oc }} process -f {{ role_path }}/files/jenkins-pipeline.yaml
-    --param SOURCE_REPOSITORY_URL={{ source_repo_url }}
-    --param SOURCE_REPOSITORY_REF={{ source_repo_branch }}
+    -p SOURCE_REPOSITORY_URL={{ source_repo_url }}
+    -p SOURCE_REPOSITORY_REF={{ source_repo_branch }}
     | {{ oc }} apply --force=true -f -
 
 - name: Create Jenkins base image pipeline
   # Most of the defaults in the template are already set to match Jenkins
   shell: >-
     {{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml
-    --param APP_NAMESPACE={{ project_name }}
+    -p APP_NAMESPACE={{ project_name }}
+    -p NOTIFY_EMAIL_LIST={{ notify_email_list }}
+    -p NOTIFY_EMAIL_FROM={{ notify_email_from }}
+    -p NOTIFY_EMAIL_REPLYTO={{ notify_email_replyto }}
     | {{ oc }} apply --force=true -f -
 
 - name: Create application base image pipeline
   # Using the same template but changing some parmeters to match the app
   shell: >-
     {{ oc }} process -f {{ role_path }}/files/base-image-pipeline.yaml
-    --param APP_BC={{ app_name }}
-    --param APP_NAME={{ app_name }}
-    --param BASE_IMAGE_TAG={{ app_base_tag }}
-    --param APP_PIPELINE={{ project_name}}-{{ app_name }}
-    --param APP_NAMESPACE={{ project_name }}
+    -p APP_BC={{ app_name }}
+    -p APP_NAME={{ app_name }}
+    -p BASE_IMAGE_TAG={{ app_base_tag }}
+    -p APP_PIPELINE={{ project_name}}-{{ app_name }}
+    -p APP_NAMESPACE={{ project_name }}
+    -p NOTIFY_EMAIL_LIST={{ notify_email_list }}
+    -p NOTIFY_EMAIL_FROM={{ notify_email_from }}
+    -p NOTIFY_EMAIL_REPLYTO={{ notify_email_replyto }}
     | {{ oc }} apply --force=true -f -
 
 - name: Get last jenkins-custom build number
