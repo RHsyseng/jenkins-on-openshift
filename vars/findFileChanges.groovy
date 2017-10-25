@@ -14,7 +14,9 @@ def call(String filePath) {
         }
     })
 
-    if (file) {
-        return true
-    } else return false
+    if( !file.size().asBoolean()) {
+        return false
+    } else {
+        return (file[0][0].asBoolean())
+    }
 }
