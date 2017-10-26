@@ -61,8 +61,8 @@
     -p APP_DC_NAME={{ app_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
-    -p DEV_URI=insecure://{{ hostvars['dev-1']['clusterhost'] }}
-    -p STAGE_URI=insecure://{{ hostvars['stage-1']['clusterhost'] }}
+    -p DEV_URI={{ openshift_protocol }}://{{ hostvars['dev-1']['clusterhost'] }}
+    -p STAGE_URI={{ openshift_protocol }}://{{ hostvars['stage-1']['clusterhost'] }}
     -p DEV_PROJECT={{ hostvars['dev-1']['project_name'] }}
     -p STAGE_PROJECT={{ hostvars['stage-1']['project_name'] }}
     -p REGISTRY_PROJECT={{ hostvars['registry-1']['project_name'] }}
@@ -78,8 +78,8 @@
     -p APP_DC_NAME={{ app_name }}
     -p APP_TEMPLATE_PATH={{ app_template_path }}
     -p REGISTRY_URI={{ central_registry_hostname }}
-    -p OPENSHIFT_REGISTRY_URI=insecure://{{ hostvars['registry-1']['clusterhost'] }}
-    -p PROD_URI=insecure://{{ hostvars['prod-1']['clusterhost'] }}
+    -p OPENSHIFT_REGISTRY_URI={{ openshift_protocol }}://{{ hostvars['registry-1']['clusterhost'] }}
+    -p PROD_URI={{ openshift_protocol }}://{{ hostvars['prod-1']['clusterhost'] }}
     -p PROD_PROJECT={{ hostvars['prod-1']['project_name'] }}
     -p REGISTRY_PROJECT={{ hostvars['registry-1']['project_name'] }}
     -p PROD_SECRET_NAME={{ prod_api_secret_name }}

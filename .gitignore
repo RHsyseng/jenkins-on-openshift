@@ -2,3 +2,7 @@
 jenkins-on-openshift.iml
 ansible/host_vars/*.yml
 ansible/group_vars/*.yml
+.gradle/
+gradle/
+gradlew
+gradlew.bat
