@@ -136,7 +136,9 @@ pipeline {
                              */
                             def buildConfig = openshift.selector("buildconfig/${params.APP_DC_NAME}").object()
                             buildConfigs = createdObjects.narrow('bc')
-                            imageName = "${((String) buildConfig.spec.output.to.name).split(':')[0]}:${env.TAG}"
+
+                            imageName = "${params.REGISTRY_URI}/${params.REGISTRY_PROJECT}/" +
+                                    "${params.IMAGE_STREAM_NAME}:${env.TAG}"
 
                             if (updateBuildConfig) {
                                 echo ">>>>> Enter OpenShift Apply BuildConfig <<<<<"
