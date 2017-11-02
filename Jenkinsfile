@@ -91,16 +91,16 @@ pipeline {
                                     "REGISTRY_PROJECT=${params.REGISTRY_PROJECT}",
                                     "REGISTRY=${params.REGISTRY_URI}")
 
-                           	/* If the project's secret exists it must be removed at least in
-                             * the case of using a database along with an application.
-							 *
-                             * The section below confirms if the secret exists and if so removes the
-                             * item from the collection.
-                             *
-                             * Issue: When using a template with generated values each process of that
-                             * template will change the generated values.  If a DeploymentConfig is not
-                             * redeployed those changes will not be propagated.
-                             */
+                            /* If the project's secret exists it must be removed at least in
+                          * the case of using a database along with an application.
+                          *
+                          * The section below confirms if the secret exists and if so removes the
+                          * item from the collection.
+                          *
+                          * Issue: When using a template with generated values each process of that
+                          * template will change the generated values.  If a DeploymentConfig is not
+                          * redeployed those changes will not be propagated.
+                          */
 
                             if (openshift.selector("secret/${params.APP_DC_NAME}").exists()) {
                                 def count = 0
@@ -265,10 +265,14 @@ pipeline {
                              * Watch the status until the rollout is complete using the `oc`
                              * option `-w` to watch
                              */
+                            def result = null
                             deploymentConfig = openshift.selector("dc", params.APP_DC_NAME)
                             deploymentConfig.rollout().latest()
                             timeout(10) {
-                                deploymentConfig.rollout().status("-w")
+                                result = deploymentConfig.rollout().status("-w")
+                            }
+                            if (result.status != 0) {
+                                error(result.err)
                             }
                         }
                     }
@@ -340,10 +344,14 @@ pipeline {
                 script {
                     openshift.withCluster(params.STAGE_URI, env.STAGE_PSW) {
                         openshift.withProject(params.STAGE_PROJECT) {
+                            def result = null
                             deploymentConfig = openshift.selector("dc", params.APP_DC_NAME)
                             deploymentConfig.rollout().latest()
                             timeout(10) {
-                                deploymentConfig.rollout().status("-w")
+                                result = deploymentConfig.rollout().status("-w")
+                            }
+                            if (result.status != 0) {
+                                error(result.err)
                             }
                         }
                     }
