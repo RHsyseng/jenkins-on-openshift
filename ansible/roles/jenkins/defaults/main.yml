@@ -1,0 +1,4 @@
+---
+# name of the generated ImageStreams
+imagestream_name: "{{ app_name }}"
+imagestream_latest_tag: latest

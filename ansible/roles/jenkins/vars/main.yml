@@ -1,3 +1,14 @@
 ---
-
+# The deployed Jenkins instance uses a PersistentVolumeClaim. This var
+# specifies the requested size of the PVC
+jenkins_volume_size: 2Gi
+# The {registry,stage,prod}_api_secret_names set the names of the secrets that
+# are created to store tokens to be sync'd to Jenkins credentials to allow jobs
+# (which run in the dev environment) to access the projects/clusters of the
+# other environments
+registry_api_secret_name: registry-api
+stage_api_secret_name: stage-api
+prod_api_secret_name: prod-api
+# openshift_protocol is the URI protocol to connect to clusters.
+# Here we make it depend on the 'validate_certs' variable
 openshift_protocol: "{% if validate_certs %}https{% else %}insecure{% endif %}"

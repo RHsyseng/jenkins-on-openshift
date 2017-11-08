@@ -6,8 +6,6 @@ project_name: stage
 project_display_name: "Stage - Software lifecycle"
 project_description: "Stage - Software Development Lifecycle (SDLC)"
 
-jenkins_automation_openshift_role: edit
-
 admin_users:
 #  - user1
 #  - user2
