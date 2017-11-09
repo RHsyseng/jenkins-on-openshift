@@ -22,24 +22,27 @@
 
     - name: Create Project
       command: >-
-        {{ oc }} new-project {{ project_name }}
+        {{ oc }} --config=/dev/null new-project {{ project_name }}
         --display-name='{{ project_display_name }}'
         --description='{{ project_description }}'
       ignore_errors: True
 
     - name: Create service account
       command: >-
-        {{ oc }} create serviceaccount {{ ansible_serviceaccount_name }}
+        {{ oc }} --config=/dev/null
+        create serviceaccount {{ ansible_serviceaccount_name }}
       ignore_errors: True
 
     - name: Add role to user
       command: >-
-        {{ oc }}
+        {{ oc }} --config=/dev/null
         policy add-role-to-user admin -z {{ ansible_serviceaccount_name }}
       ignore_errors: True
 
     - name: Get Token
-      command: "{{ oc }} sa get-token {{ ansible_serviceaccount_name }}"
+      command: >-
+        {{ oc }} --config=/dev/null
+        sa get-token {{ ansible_serviceaccount_name }}
       register: new_token
 
     - name: New Token
