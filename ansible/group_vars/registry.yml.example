@@ -34,5 +34,3 @@ deprecated_admin_users:
 deprecated_editor_users:
 deprecated_viewer_users:
 deprecated_viewer_groups:
-
-jenkins_automation_openshift_role: edit

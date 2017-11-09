@@ -1,0 +1,14 @@
+---
+# The name of the ServiceAccount that is created in the different projects to
+# allow Jenkins job to access them
+jenkins_serviceaccount_name: jenkins
+# The OpenShift role that will be assigned to the jenkins ServiceAccount in
+# each project. Note that you can override this per environment in the
+# environment's respective file under group_vars
+jenkins_automation_openshift_role: edit
+# project_*_role are the names of the OpenShift roles that will be used to grant
+# the respective privileges. These should rarely need adjustment, unless the
+# OpenShift clusters have had their default roles customized.
+project_admin_role: admin
+project_editor_role: edit
+project_registry_viewer_role: registry-viewer
