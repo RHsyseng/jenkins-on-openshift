@@ -39,13 +39,19 @@ objects:
                                         isTag = isTag.object()
                                     }
                                     openshift.withProject("${appNamespace}") {
-                                        def appBc = openshift.selector( "bc/${appBcName}" )
-                                        appBc = appBc.object()
-                                        latestBaseImg = "${isTag.image.dockerImageReference}"
-                                        def buildNumber = "${appBc.status.lastVersion}"
-                                        def appBuild = openshift.selector( "build/${appBcName}-${buildNumber}" )
-                                        appBuild = appBuild.object()
-                                        currentBaseImg = "${appBuild.spec.strategy.sourceStrategy.from.name}"
+                                        if (openshift.selector( "bc/${appBcName}" ).exists() ) {
+                                          def appBc = openshift.selector( "bc/${appBcName}" )
+                                          appBc = appBc.object()
+                                          latestBaseImg = "${isTag.image.dockerImageReference}"
+                                          def buildNumber = "${appBc.status.lastVersion}"
+                                          def appBuild = openshift.selector( "build/${appBcName}-${buildNumber}" )
+                                          appBuild = appBuild.object()
+                                          currentBaseImg = appBuild.spec.strategy.sourceStrategy.from.name
+                                        }
+                                        else {
+                                          echo "The OpenShift BuildConfig ${appBcName} does not exist"
+                                          return
+                                        }
                                     }
                                 }
                             }
