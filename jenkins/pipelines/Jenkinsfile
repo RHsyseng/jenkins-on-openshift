@@ -1,27 +1,21 @@
 // Manage Jenkins master service
+@Library('Utils') _
+
 pipeline {
     agent any
-    /*
+
     triggers {
         pollSCM('H/15 * * * *')
     }
-    */
+
     stages {
-        stage('Checkout') {
-            steps {
-                // ignore checkout part of excludedRegions
-                checkout([$class: 'GitSCM',
-                    branches: [[name: "*/master"]],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [[
-                        $class: 'PathRestriction',
-                        includedRegions: '^jenkins/.*']],
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/RHsyseng/jenkins-on-openshift']]])
-            }
-        }
         stage('S2I build Jenkins with custom configuration') {
+            when {
+                expression {
+                    findFileChangesContains("jenkins")
+                }
+
+            }
             steps {
                 openshiftBuild bldCfg: 'jenkins-custom'
             }
@@ -29,7 +23,7 @@ pipeline {
     }
     post {
         failure {
-            mail to: 'aweiteka@redhat.com',
+            mail to: 'example@example.com',
             from: 'jenkins@example.com', replyTo: 'noreply@example.com',
             subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
             body: "Jenkins master build failed: ${env.BUILD_URL}"
