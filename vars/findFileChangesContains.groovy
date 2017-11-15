@@ -14,9 +14,6 @@ def call(String match) {
         }
     })
 
-
-    println( "${file}" )
-
     if( !file.size().asBoolean()) {
         return false
     } else {
