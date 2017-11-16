@@ -96,11 +96,14 @@ describe their respective cluster/project details:
 
 Here is where you configure authentication to each of the environments.
 
-Depending on the
-[authentication method](https://docs.openshift.com/container-platform/3.6/install_config/configuring_authentication.html)
-of the OpenShift cluster, authentications can be provided either as `openshift_username`/`openshift_password` **or** as an authentication [`token`](https://docs.openshift.com/container-platform/3.6/cli_reference/get_started_cli.html#installing-the-cli).
+Depending on the [authentication method](https://docs.openshift.com/container-platform/3.6/install_config/configuring_authentication.html)
+of the OpenShift cluster, authentications can be provided either as
+`openshift_username`/`openshift_password` **or** as an authentication
+[`token`](https://docs.openshift.com/container-platform/3.6/cli_reference/get_started_cli.html#installing-the-cli).
 
-A `token` obtained from `oc whoami -t` always works, and it's the only option if your configured authentication method requires an external login (for example GitHub).
+A `token` obtained from `oc whoami -t` always works, and it's the only option if
+your configured authentication method requires an external login (for example
+GitHub).
 
 **NOTE**: since we are dealing with authentication information you may want to
 utilize [ansible-vault](https://docs.ansible.com/ansible/2.4/vault.html) to
@@ -124,8 +127,17 @@ adding `validate_certs: false` there while keeping the default `validate_certs:
 true` in the `all.yml` file.
 
 You can also override values in the inventory file, and/or via the
-`--extra-vars` option of the `ansible-playbook` command. See the Ansible
-documentation for more details.
+`--extra-vars` option of the `ansible-playbook` command. For example: if you are
+developing on a single cluster you might prefer to set `clusterhost` just once
+as an inventory variable. Moreover, if you also share the same administrtive
+user across the projects you might prefer to pass an authentication token
+directly to the playbook with:
+
+    ansible-playbook --extra-vars token=$(oc whoami -t) ...
+
+See the
+[Ansible documentation](http://docs.ansible.com/ansible/2.4/playbooks_variables.html)
+for more details.
 
 ## Example setups
 
@@ -152,6 +164,13 @@ also have to have that registry configured as an insecure registry, for example
 by having it listed as an insecure registry in `/etc/containers/registries.conf`
 or in `/etc/sysconfig/docker`.
 
+Please keep in mind that disabling certificate validation is not ideal though,
+so you might prefer to properly mange TLS certificates instead. OpenShift
+documentation has sections on
+[Securing the Container Platform](https://docs.openshift.com/container-platform/latest/security/securing_container_platform.html)
+itself as well as
+[Securing the Registry](https://docs.openshift.com/container-platform/3.6/install_config/registry/securing_and_exposing_registry.html).
+
 ### Single cluster / shared clusters
 
 The playbook is designed to operate on four separate OpenShift clusters (one
@@ -160,9 +179,11 @@ production, registry.
 
 It is possible to share the same cluster among various environments (potentially
 all 4 running on the same cluster, on separate projects) by just pointing them
-to the same `clusterhost`. This is particularly useful during local testing,
-where you can run the whole stack on a single all-in-one cluster powered by
-[minishift](https://github.com/minishift/minishift) or
+to the same `clusterhost`. On a single cluster configuration,
+`central_registry_hostname` can be set to `docker-registry.default.svc:5000` to
+directly use the default registry via its service.  This is particularly useful
+during local testing, where you can run the whole stack on a single all-in-one
+cluster powered by [minishift](https://github.com/minishift/minishift) or
 [`oc cluster up`](https://github.com/openshift/origin/blob/master/docs/cluster_up_down.md).
 
 However, if the *registry* project shares cluster with some other project(s)
