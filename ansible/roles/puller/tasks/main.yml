@@ -1,6 +1,6 @@
 ---
 - name: Remove pull-from central registry secret if it exists
-  command: "{{ oc }} get secret {{ registry_pull_secret }}"
+  command: "{{ oc }} delete secret {{ registry_pull_secret }}"
   ignore_errors: true
 
 - name: Create secret to pull from the central registry

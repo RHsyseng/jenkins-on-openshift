@@ -3,6 +3,11 @@
  */
 @Library('Utils') _
 
+/* The path, relative to the root of the repo (where this Jenkinsfile is),
+ * where the file that contains the version tag (e.g. 1.0) resides.
+ */
+final APP_VERSION_FILE = 'app/VERSION'
+
 pipeline {
     agent any
     stages {
@@ -53,7 +58,11 @@ pipeline {
                     updateBuildConfig = false
 
                     /* Read the version but make sure there is not any characters we do not expect */
-                    env.VERSION = readFile('app/VERSION').trim()
+                    if (! fileExists(APP_VERSION_FILE)) {
+                        error("Application version tracking file ${APP_VERSION_FILE} does not exist!")
+                        return
+                    }
+                    env.VERSION = readFile(APP_VERSION_FILE).trim()
                     env.TAG = "${env.VERSION}-${env.BUILD_NUMBER}"
                     openshift.withCluster(params.DEV_URI) {
                         openshift.withProject(params.DEV_PROJECT) {
