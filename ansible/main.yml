@@ -2,8 +2,6 @@
 
 - name: Project Bootstrap
   hosts: all
-  vars:
-    ansible_serviceaccount_name: ansible
   tasks:
     - name: Get User Token
       uri:
@@ -27,43 +25,24 @@
         --description='{{ project_description }}'
       ignore_errors: True
 
-    - name: Create service account
-      command: >-
-        {{ oc }} --config=/dev/null
-        create serviceaccount {{ ansible_serviceaccount_name }}
-      ignore_errors: True
-
-    - name: Add role to user
-      command: >-
-        {{ oc }} --config=/dev/null
-        policy add-role-to-user admin -z {{ ansible_serviceaccount_name }}
-      ignore_errors: True
-
-    - name: Get Token
-      command: >-
-        {{ oc }} --config=/dev/null
-        sa get-token {{ ansible_serviceaccount_name }}
-      register: new_token
-
-    - name: New Token
-      set_fact:
-        token: "{{ new_token.stdout }}"
-
 - name: Configure project authorization
   hosts: all
   roles:
     - role: auth
+
 - name: Setup Jenkins and registry push credentials
   hosts: dev
   roles:
     - role: jenkins
     - role: pusher
+
 - name: Setup registry tokens
   hosts:
     - stage
     - prod
   roles:
     - role: puller
+
 - name: Open up registry to anon pulls
   hosts: registry
   tasks:
