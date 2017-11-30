@@ -8,6 +8,16 @@ final APP_VERSION_FILE = 'app/VERSION'
 pipeline {
     agent any
     stages {
+        stage('Confirm Application Version File') {
+            steps {
+                script {
+                    if (! fileExists(APP_VERSION_FILE)) {
+                        error("Application version tracking file ${APP_VERSION_FILE} does not exist!")
+                        return
+                    }
+                }
+            }
+        }
         /** Create Credentials
          *
          * Create a Jenkins Credential from OpenShift Secret
@@ -30,10 +40,6 @@ pipeline {
         stage('Production - Tag') {
             environment {
                 REGISTRY = credentials("${params.REGISTRY_SECRET_NAME}")
-                if (! fileExists(APP_VERSION_FILE)) {
-                    error("Application version tracking file ${APP_VERSION_FILE} does not exist!")
-                    return
-                }
                 RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
@@ -80,10 +86,6 @@ pipeline {
         stage('Production - OpenShift Template') {
             environment {
                 PRODUCTION = credentials("${params.PROD_SECRET_NAME}")
-                if (! fileExists(APP_VERSION_FILE)) {
-                    error("Application version tracking file ${APP_VERSION_FILE} does not exist!")
-                    return
-                }
                 RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
