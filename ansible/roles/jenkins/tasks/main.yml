@@ -46,7 +46,6 @@
   shell: >-
     {{ oc }} process -f {{ role_path }}/files/jenkins-master.yaml
     --param NAMESPACE={{ project_name }}
-    --param VOLUME_CAPACITY={{ jenkins_volume_size }}
     --param MEMORY_LIMIT=2Gi
     --param JENKINS_IMAGE_STREAM_TAG=jenkins-custom:latest
     | {{ oc }} apply -f -
