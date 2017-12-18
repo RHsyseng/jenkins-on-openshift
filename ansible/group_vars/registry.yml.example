@@ -18,16 +18,16 @@ editor_users:
   # we need to grant access to the relevant service accounts from the
   # dev project. Uncomment this to grant push access from dev builds
   # to the registry:
-  #- system:serviceaccount:dev:builder
+  - system:serviceaccount:dev:builder
 viewer_users:
 viewer_groups:
   # If the registry is the internal registry in the dev cluster, we need to
   # grant access to the relevant service accounts from the dev project
   # This grants pull access from dev/stage/prod to the registry:
   # note that dev is required for the Jenkins job to monitor the imagestream
-  #- system:serviceaccounts:dev
-  #- system:serviceaccounts:stage
-  #- system:serviceaccounts:prod
+  - system:serviceaccounts:dev
+  - system:serviceaccounts:stage
+  - system:serviceaccounts:prod
 # Use the various deprecated_* vars to *remove* entries from the
 # respective lists.
 deprecated_admin_users:

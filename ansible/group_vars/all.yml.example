@@ -2,13 +2,13 @@
 # ----------------------
 # Application parameters
 # ----------------------
-source_repo_url: https://github.com/RHsyseng/jenkins-on-openshift.git
+source_repo_url: https://github.com/tchughesiv/jenkins-on-openshift.git
 source_repo_branch: master
 # path (inside the repo) where the application template is
 app_template_path: app/openshift/nodejs-mongodb-persistent.json
 
 # app_name is used to name build and deployment configurations
-app_name: nodejs-mongo-persistent
+app_name: nodejs-mongodb-ephemeral
 app_base_tag: nodejs:6
 
 # ----------------------
@@ -17,7 +17,7 @@ app_base_tag: nodejs:6
 
 # The hostname to the central registry where all images are stored.
 # You can add a port if needed, e.g. registry.example.com:5000
-central_registry_hostname: registry.example.com
+central_registry_hostname: docker-registry.default.svc:5000
 
 # Wether to validate TLS/SSL certs involved in communications with OpenShift
 # and/or registry. Note: setting this to False may not be enough: this only
@@ -29,7 +29,7 @@ validate_certs: True
 # --------------
 # Job parameters
 # --------------
-notify_email_list: devops@example.com
+notify_email_list: tohughes@redhat.com
 notify_email_from: jenkins@example.com
 notify_email_replyto: noreply@example.com
 
