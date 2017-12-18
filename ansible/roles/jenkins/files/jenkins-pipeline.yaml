@@ -24,7 +24,7 @@ parameters:
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
   required: true
-  value: https://github.com/RHsyseng/jenkins-on-openshift.git
+  value: https://github.com/tchughesiv/jenkins-on-openshift.git
 - description: Set this to a branch name, tag or other ref of your repository if you
     are not using the default branch.
   displayName: Git Reference

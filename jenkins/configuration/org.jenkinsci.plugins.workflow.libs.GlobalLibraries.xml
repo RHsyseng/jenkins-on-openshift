@@ -7,7 +7,7 @@
         <scm class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.0.4">
           <id>44c97d51-cf48-4690-b645-72e0bc32773e</id>
           <checkoutCredentialsId>SAME</checkoutCredentialsId>
-          <repoOwner>rhsyseng</repoOwner>
+          <repoOwner>tchughesiv</repoOwner>
           <repository>jenkins-on-openshift</repository>
           <includes>*</includes>
           <excludes></excludes>
