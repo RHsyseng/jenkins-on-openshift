@@ -260,23 +260,6 @@
       }
     },
     {
-      "kind": "PersistentVolumeClaim",
-      "apiVersion": "v1",
-      "metadata": {
-        "name": "${DATABASE_SERVICE_NAME}"
-      },
-      "spec": {
-        "accessModes": [
-          "ReadWriteOnce"
-        ],
-        "resources": {
-          "requests": {
-            "storage": "${VOLUME_CAPACITY}"
-          }
-        }
-      }
-    },
-    {
       "kind": "Service",
       "apiVersion": "v1",
       "metadata": {
@@ -406,22 +389,8 @@
                     "memory": "${MEMORY_MONGODB_LIMIT}"
                   }
                 },
-                "volumeMounts": [
-                  {
-                    "name": "${DATABASE_SERVICE_NAME}-data",
-                    "mountPath": "/var/lib/mongodb/data"
-                  }
-                ]
               }
             ],
-            "volumes": [
-              {
-                "name": "${DATABASE_SERVICE_NAME}-data",
-                "persistentVolumeClaim": {
-                  "claimName": "${DATABASE_SERVICE_NAME}"
-                }
-              }
-            ]
           }
         }
       }
@@ -479,13 +448,6 @@
       "description": "Maximum amount of memory the MongoDB container can use.",
       "required": true,
       "value": "512Mi"
-    },
-    {
-      "name": "VOLUME_CAPACITY",
-      "displayName": "Volume Capacity",
-      "description": "Volume space available for data, e.g. 512Mi, 2Gi",
-      "value": "1Gi",
-      "required": true
     },
     {
       "name": "SOURCE_REPOSITORY_URL",
