@@ -15,6 +15,7 @@ pipeline {
                         error("Application version tracking file ${APP_VERSION_FILE} does not exist!")
                         return
                     }
+                    env.RELEASE_VERSION = readFile(APP_VERSION_FILE).trim()
                 }
             }
         }
@@ -40,7 +41,6 @@ pipeline {
         stage('Production - Tag') {
             environment {
                 REGISTRY = credentials("${params.REGISTRY_SECRET_NAME}")
-                RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
                 script {
@@ -86,7 +86,6 @@ pipeline {
         stage('Production - OpenShift Template') {
             environment {
                 PRODUCTION = credentials("${params.PROD_SECRET_NAME}")
-                RELEASE_VERSION = readFile('app/VERSION').trim()
             }
             steps {
                 script {
