@@ -8,6 +8,21 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    name: jenkins
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: registry.access.redhat.com/openshift3/jenkins-2-rhel7:v3.7
+      name: v3.7
+      referencePolicy:
+        type: Source
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
     name: jenkins-custom
     app: jenkins-custom
   spec: {}
@@ -41,8 +56,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: jenkins:latest
-          namespace: openshift
+          name: jenkins:v3.7
       type: Source
     successfulBuildsHistoryLimit: 5
     triggers: {}
