@@ -167,10 +167,6 @@ pipeline {
                             }
 
                             timeout(10) {
-                                build.watch {
-                                    /* Wait until a build object is available */
-                                    return it.count() > 0
-                                }
                                 build.untilEach {
                                     /* Wait until a build object is complete */
 
