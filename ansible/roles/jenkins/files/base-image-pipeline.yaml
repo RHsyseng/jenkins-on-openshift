@@ -69,13 +69,26 @@ objects:
                     stage('Upgrade prompt') {
                         steps {
                             script {
+                                def goAhead
                                 if (rebuild == 'true') {
-                                    timeout(1) {
-                                        userInput = input(
-                                            id: 'userInput', message: 'Upgrade base image?')
+                                    /*
+                                    * Check if the developer wants an updated build using the new
+                                    * base image. The 'input' function will wait for an interactive
+                                    * answer for 1 minute. If the UPGRADE_WIHTOUT_ASKING parameter
+                                    * is set to any value, the build will be triggered automatically
+                                    * without the interactive check.
+                                    */
+                                    if (params.containsKey('UPGRADE_WITHOUT_ASKING')) {
+                                        goAhead = true
+                                    } else {
+                                        timeout(1) {
+                                            goAhead = input(
+                                                id: 'userInput', message: 'Upgrade base image?')
+                                        }
                                     }
                                 }
-                                if (rebuild == 'true' && userInput != 'null') {
+                                if (rebuild == 'true' && goAhead != 'null') {
+                                    echo "Starting a build of ${appPipeline}"
                                     build job: "${appPipeline}", wait: false
                                     //echo "rebuilding job ${appPipeline}"
                                 }
