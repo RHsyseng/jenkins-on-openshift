@@ -26,7 +26,6 @@ objects:
                     appName = "${APP_NAME}"
                     appBcName = "${APP_BC}"
                     appNamespace = "${APP_NAMESPACE}"
-                    appPipeline = "${APP_PIPELINE}"
                 }
                 stages {
                     stage('Check base image version') {
@@ -88,9 +87,8 @@ objects:
                                     }
                                 }
                                 if (rebuild == 'true' && goAhead != 'null') {
-                                    echo "Starting a build of ${appPipeline}"
-                                    build job: "${appPipeline}", wait: false
-                                    //echo "rebuilding job ${appPipeline}"
+                                    echo "Starting a build of ${appBcName}"
+                                    build job: "${appBcName}", wait: false
                                 }
                             }
                         }
@@ -154,8 +152,3 @@ parameters:
   name: NOTIFY_EMAIL_REPLYTO
   required: true
   value: "noreply@example.com"
-- description: Application pipeline name
-  displayName: Application pipeline name, e.g. 'jenkins-lifecycle'
-  name: APP_PIPELINE
-  required: true
-  value: "lifecycle-jenkins-lifecycle"
