@@ -44,20 +44,35 @@ pipeline {
             }
             steps {
                 script {
-                    def userInput
-                    timeout(2) {
-                        userInput = input(message: "Enter build to release as version ${env.RELEASE_VERSION}", parameters: [string(defaultValue: '', description: 'Build version image tag, e.g. 1.3-8', name: 'buildVersion')])
+                    /** Set the Production Tag via a build parameter
+                     *
+                     * The RELEASE_VERSION_TAG optional parameter allows to pre-set
+                     * which image tag to promote to production. If unset, the user
+                     * will be prompted.
+                     */
+                    def releaseVersionTag
+                    if (params.containsKey('RELEASE_VERSION_TAG')) {
+                        releaseVersionTag = params.RELEASE_VERSION_TAG
+                    } else {
+                        timeout(2) {
+                            releaseVersionTag = input(
+                                message: "Enter build to release as version ${env.RELEASE_VERSION}",
+                                parameters: [ string(defaultValue: '',
+                                                     description: 'Build version image tag, e.g. 1.3-8',
+                                                     name: 'buildVersion')
+                                ])
+                        }
                     }
-                    echo "Releasing build ${userInput} as ${env.RELEASE_VERSION}"
+                    echo "Releasing build ${releaseVersionTag} as ${env.RELEASE_VERSION}"
 
                     /* Connect to the registry cluster and project
                      * Make sure the image tag exists if not abort the job
                      */
                     openshift.withCluster("${params.OPENSHIFT_REGISTRY_URI}", env.REGISTRY_PSW) {
                         openshift.withProject("${params.REGISTRY_PROJECT}") {
-                            def istagSelector = openshift.selector("istag", "${params.IMAGE_STREAM_NAME}:${userInput}")
+                            def istagSelector = openshift.selector("istag", "${params.IMAGE_STREAM_NAME}:${releaseVersionTag}")
                             if (!istagSelector.exists()) {
-                                echo "Imagestream tag ${userInput} does not exist in registry"
+                                echo "Imagestream tag ${releaseVersionTag} does not exist in registry"
                                 currentBuild.result = 'ABORTED'
                             }
                         }
@@ -68,9 +83,9 @@ pipeline {
                      */
                     openshift.withCluster("${params.OPENSHIFT_REGISTRY_URI}", env.REGISTRY_PSW) {
                         openshift.withProject("${params.REGISTRY_PROJECT}") {
-                            openshift.tag("${openshift.project()}/${params.IMAGE_STREAM_NAME}:${userInput}",
+                            openshift.tag("${openshift.project()}/${params.IMAGE_STREAM_NAME}:${releaseVersionTag}",
                                     "${openshift.project()}/${params.IMAGE_STREAM_NAME}:${env.RELEASE_VERSION}")
-                            openshift.tag("${openshift.project()}/${params.IMAGE_STREAM_NAME}:${userInput}",
+                            openshift.tag("${openshift.project()}/${params.IMAGE_STREAM_NAME}:${releaseVersionTag}",
                                     "${openshift.project()}/${params.IMAGE_STREAM_NAME}:latest")
                         }
                     }

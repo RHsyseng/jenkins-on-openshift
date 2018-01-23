@@ -113,7 +113,6 @@
     -p APP_BC={{ app_name }}
     -p APP_NAME={{ app_name }}
     -p BASE_IMAGE_TAG={{ app_base_tag }}
-    -p APP_PIPELINE={{ project_name}}-{{ app_name }}
     -p APP_NAMESPACE={{ project_name }}
     -p NOTIFY_EMAIL_LIST={{ notify_email_list }}
     -p NOTIFY_EMAIL_FROM={{ notify_email_from }}

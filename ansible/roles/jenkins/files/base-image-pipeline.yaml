@@ -26,7 +26,6 @@ objects:
                     appName = "${APP_NAME}"
                     appBcName = "${APP_BC}"
                     appNamespace = "${APP_NAMESPACE}"
-                    appPipeline = "${APP_PIPELINE}"
                 }
                 stages {
                     stage('Check base image version') {
@@ -69,15 +68,27 @@ objects:
                     stage('Upgrade prompt') {
                         steps {
                             script {
+                                def goAhead
                                 if (rebuild == 'true') {
-                                    timeout(1) {
-                                        userInput = input(
-                                            id: 'userInput', message: 'Upgrade base image?')
+                                    /*
+                                    * Check if the developer wants an updated build using the new
+                                    * base image. The 'input' function will wait for an interactive
+                                    * answer for 1 minute. If the UPGRADE_WIHTOUT_ASKING parameter
+                                    * is set to any value, the build will be triggered automatically
+                                    * without the interactive check.
+                                    */
+                                    if (params.containsKey('UPGRADE_WITHOUT_ASKING')) {
+                                        goAhead = true
+                                    } else {
+                                        timeout(1) {
+                                            goAhead = input(
+                                                id: 'userInput', message: 'Upgrade base image?')
+                                        }
                                     }
                                 }
-                                if (rebuild == 'true' && userInput != 'null') {
-                                    build job: "${appPipeline}", wait: false
-                                    //echo "rebuilding job ${appPipeline}"
+                                if (rebuild == 'true' && goAhead != 'null') {
+                                    echo "Starting a build of ${appBcName}"
+                                    build job: "${appBcName}", wait: false
                                 }
                             }
                         }
@@ -141,8 +152,3 @@ parameters:
   name: NOTIFY_EMAIL_REPLYTO
   required: true
   value: "noreply@example.com"
-- description: Application pipeline name
-  displayName: Application pipeline name, e.g. 'jenkins-lifecycle'
-  name: APP_PIPELINE
-  required: true
-  value: "lifecycle-jenkins-lifecycle"
