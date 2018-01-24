@@ -2,6 +2,7 @@
 - name: Remove pull-from central registry secret if it exists
   command: "{{ oc }} delete secret {{ registry_pull_secret }}"
   ignore_errors: true
+  no_log: "{{ oc_no_log }}"
 
 - name: Create secret to pull from the central registry
   command: >-
@@ -9,6 +10,8 @@
     --docker-username=unused
     --docker-password={{ registry_pull_token }}
     --docker-email=unused --docker-server={{ central_registry_hostname }}
+  no_log: "{{ oc_no_log }}"
 
 - name: Link docker pull registry secret to the default service account
   command: "{{ oc }} secrets link default {{ registry_pull_secret }} --for=pull"
+  no_log: "{{ oc_no_log }}"
