@@ -3,53 +3,63 @@
   command: "{{ oc }} policy add-role-to-user {{ project_admin_role}} {{ item }}"
   with_items: "{{ admin_users }}"
   when: admin_users
+  no_log: "{{ oc_no_log }}"
 
 - name: Add editor users
   command: "{{ oc }} policy add-role-to-user {{ project_editor_role}} {{ item }}"
   with_items: "{{ editor_users }}"
   when: editor_users
+  no_log: "{{ oc_no_log }}"
 
 - name: Add viewer users
   command: "{{ oc }} policy add-role-to-user {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ viewer_users }}"
   when: viewer_users
+  no_log: "{{ oc_no_log }}"
 
 - name: Add viewer groups
   command: "{{ oc }} policy add-role-to-group {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ viewer_groups }}"
   when: viewer_groups
+  no_log: "{{ oc_no_log }}"
 
 - name: Remove admin users
   command: "{{ oc }} policy remove-role-from-user {{ project_admin_role}} {{ item }}"
   with_items: "{{ deprecated_admin_users }}"
   when: deprecated_admin_users
+  no_log: "{{ oc_no_log }}"
 
 - name: Remove editor users
   command: "{{ oc }} policy remove-role-from-user {{ project_editor_role}} {{ item }}"
   with_items: "{{ deprecated_editor_users }}"
   when: deprecated_editor_users
+  no_log: "{{ oc_no_log }}"
 
 - name: Remove viewer users
   command: "{{ oc }} policy remove-role-from-user {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ deprecated_viewer_users }}"
   when: deprecated_viewer_users
+  no_log: "{{ oc_no_log }}"
 
 - name: Remove viewer groups
   command: "{{ oc }} policy remove-role-from-group {{ project_registry_viewer_role}} {{ item }}"
   with_items: "{{ deprecated_viewer_groups }}"
   when: deprecated_viewer_groups
+  no_log: "{{ oc_no_log }}"
 
 - name: Check if Jenkins serviceaccount exists
   command: "{{ oc }} get sa {{ jenkins_serviceaccount_name }}"
   register: jenkins_sa_exists
   ignore_errors: true
   when: jenkins_automation_openshift_role is defined
+  no_log: "{{ oc_no_log }}"
 
 - name: Create Jenkins serviceaccount
   command: "{{ oc }} create serviceaccount {{ jenkins_serviceaccount_name }}"
   when:
     - jenkins_sa_exists|failed
     - jenkins_automation_openshift_role is defined
+  no_log: "{{ oc_no_log }}"
 
 - name: Assign role to Jenkins serviceaccount
   command: >-
@@ -58,24 +68,30 @@
   when:
     - jenkins_sa_exists|failed
     - jenkins_automation_openshift_role is defined
+  no_log: "{{ oc_no_log }}"
 
 - name: Get Jenkins token value
   command: "{{ oc }} sa get-token {{ jenkins_serviceaccount_name }}"
   register: jenkinstoken
   when: jenkins_automation_openshift_role is defined
+  no_log: "{{ oc_no_log }}"
 
 - set_fact:
     jenkinstoken: "{{ jenkinstoken.stdout }}"
   when: jenkins_automation_openshift_role is defined
+  no_log: "{{ oc_no_log }}"
 
 - name: Get registry push token value
   command: "{{ oc }} sa get-token builder"
   register: forpush
+  no_log: "{{ oc_no_log }}"
 
 - name: Get pull token value
   command: "{{ oc }} sa get-token deployer"
   register: forpull
+  no_log: "{{ oc_no_log }}"
 
 - set_fact:
     pushtoken: "{{ forpush.stdout }}"
     pulltoken: "{{ forpull.stdout }}"
+  no_log: "{{ oc_no_log }}"

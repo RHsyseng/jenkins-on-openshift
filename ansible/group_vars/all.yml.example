@@ -36,8 +36,31 @@ notify_email_replyto: noreply@example.com
 # --------------------------------
 # OpenShift client command options
 # --------------------------------
+# URL to location of openshift origin client
+oc_url: "https://github.com/openshift/origin/releases/download/v3.6.1/openshift-origin-client-tools-v3.6.1-008f2d5-linux-64bit.tar.gz"
+# Destination location of the oc binary
+oc_extract_dest: "{{ ansible_user_dir }}/"
+# Path to openshift client
+oc_path: "/usr/bin/oc"
+
+# Disable logging of openshift client command/shell
+# to hide tokens.
+# *NOTE*: Set to False if debugging is required.
+oc_no_log: True
+
+# Client issue creating dockercfg secrets introduced
+# in v3.7.  This workaround downloads the Origin v3.6.1
+# as a temporary resolution to the issue.  See more information
+# in the links below.
+#
+# https://github.com/openshift/origin/pull/18062
+# https://bugzilla.redhat.com/show_bug.cgi?id=1531511
+# https://bugzilla.redhat.com/show_bug.cgi?id=1476330
+enable_dockercfg_workaround: True
+
+#
 # This is how the "oc" client will be invoked.
 # The token/clusterhost/project_name are set in vars for each environment
 oc: >-
-  oc {% if not validate_certs %}--insecure-skip-tls-verify{% endif %}
+  {{ oc_path }} {% if not validate_certs %}--insecure-skip-tls-verify{% endif %}
   --token={{ token }} --server=https://{{ clusterhost }} -n {{ project_name }}
