@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: jenkins-on-openshift-testing
+objects:
+
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ansible
+    labels:
+      role: jenkins-slave
+
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: ansible
+  spec:
+    strategy:
+      type: Docker
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ansible:latest
+    source:
+      dockerfile: |
+        FROM registry.access.redhat.com/openshift3/jenkins-slave-base-rhel7
+        USER root
+
+        RUN yum clean all && \
+            yum-config-manager --enable rhel-7-server-rpms && \
+            yum-config-manager --enable rhel-7-server-extras-rpms && \
+            yum-config-manager --enable rhel-7-server-ose-3.7-rpms && \
+            yum-config-manager --enable rhel-7-fast-datapath-rpms && \
+            INSTALL_PKGS="atomic-openshift-utils" && \
+            yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+            rpm -V $INSTALL_PKGS && \
+            yum clean all
+        USER 1001
+      type: Docker
+    triggers:
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: "jenkins-on-openshift-tests"
+  spec:
+    source:
+      type: "Git"
+      git:
+        uri: ${SOURCE_REPOSITORY_URL}
+        ref: ${SOURCE_REPOSITORY_REF}
+    strategy:
+      type: "JenkinsPipeline"
+      jenkinsPipelineStrategy:
+          jenkinsfilePath: tests/Jenkinsfile
+          env:
+            - name: SOURCE_REPOSITORY_URL
+              value: "${SOURCE_REPOSITORY_URL}"
+            - name: SOURCE_REPOSITORY_REF
+              value: "${SOURCE_REPOSITORY_REF}"
+    triggers: {}
+parameters:
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: https://github.com/RHsyseng/jenkins-on-openshift.git
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: SOURCE_REPOSITORY_REF
+  value: master
