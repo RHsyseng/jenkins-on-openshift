@@ -21,7 +21,6 @@ pipeline {
                         }
 
                         try {
-
                             sh "oc login ${cluster} --username ${env.OCP_USR} --password \"${env.OCP_PSW}\" --insecure-skip-tls-verify"
                             def token = sh(script: 'oc whoami -t', returnStdout: true).trim()
 
@@ -42,6 +41,22 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+    post {
+        success {
+            mail to: "${params.NOTIFY_EMAIL_LIST}",
+            from: "${params.NOTIFY_EMAIL_FROM}",
+            replyTo: "${params.NOTIFY_EMAIL_REPLYTO}",
+            subject: "SUCCESS: jenkins-on-openshift",
+            body: "Visit ${env.BUILD_URL} for details."
+        }
+        failure {
+            mail to: "${params.NOTIFY_EMAIL_LIST}",
+            from: "${params.NOTIFY_EMAIL_FROM}",
+            replyTo: "${params.NOTIFY_EMAIL_REPLYTO}",
+            subject: "FAILURE: jenkins-on-openshift",
+            body: "Visit ${env.BUILD_URL} for details."
         }
     }
 }

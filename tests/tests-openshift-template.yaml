@@ -65,6 +65,12 @@ objects:
               value: "${SOURCE_REPOSITORY_URL}"
             - name: SOURCE_REPOSITORY_REF
               value: "${SOURCE_REPOSITORY_REF}"
+            - name: NOTIFY_EMAIL_LIST
+              value: "${NOTIFY_EMAIL_LIST}"
+            - name: NOTIFY_EMAIL_FROM
+              value: "${NOTIFY_EMAIL_FROM}"
+            - name: NOTIFY_EMAIL_REPLYTO
+              value: "${NOTIFY_EMAIL_REPLYTO}"
     triggers: {}
 parameters:
 - description: The URL of the repository with your application source code.
@@ -77,3 +83,15 @@ parameters:
   displayName: Git Reference
   name: SOURCE_REPOSITORY_REF
   value: master
+- description: Comma-separated email notification list
+  name: NOTIFY_EMAIL_LIST
+  required: true
+  value: "noreply@example.com"
+- description: Email notification From header
+  name: NOTIFY_EMAIL_FROM
+  required: true
+  value: "noreply@example.com"
+- description: Email notification Reply-To header
+  name: NOTIFY_EMAIL_REPLYTO
+  required: true
+  value: "noreply@example.com"
